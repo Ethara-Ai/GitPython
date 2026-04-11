@@ -44,18 +44,7 @@ _deprecated_platform_aliases = {
 
 
 def _getattr(name: str) -> Any:
-    try:
-        value = _deprecated_platform_aliases[name]
-    except KeyError:
-        raise AttributeError(f"module {__name__!r} has no attribute {name!r}") from None
-
-    warnings.warn(
-        f"{__name__}.{name} and other is_<platform> aliases are deprecated. "
-        "Write the desired os.name or sys.platform check explicitly instead.",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    return value
+    pass
 
 
 if not TYPE_CHECKING:  # Preserve static checking for undefined/misspelled attributes.
@@ -136,14 +125,7 @@ def safe_encode(s: AnyStr) -> bytes: ...
 
 def safe_encode(s: Optional[AnyStr]) -> Optional[bytes]:
     """Safely encode a binary string to Unicode."""
-    if isinstance(s, str):
-        return s.encode(defenc)
-    elif isinstance(s, bytes):
-        return s
-    elif s is None:
-        return None
-    else:
-        raise TypeError("Expected bytes or text, but got %r" % (s,))
+    pass
 
 
 @overload
@@ -156,10 +138,4 @@ def win_encode(s: AnyStr) -> bytes: ...
 
 def win_encode(s: Optional[AnyStr]) -> Optional[bytes]:
     """Encode Unicode strings for process arguments on Windows."""
-    if isinstance(s, str):
-        return s.encode(locale.getpreferredencoding(False))
-    elif isinstance(s, bytes):
-        return s
-    elif s is not None:
-        raise TypeError("Expected bytes or text, but got %r" % (s,))
-    return None
+    pass

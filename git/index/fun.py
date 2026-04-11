@@ -204,14 +204,7 @@ def write_cache(
 
 def read_header(stream: IO[bytes]) -> Tuple[int, int]:
     """Return tuple(version_long, num_entries) from the given stream."""
-    type_id = stream.read(4)
-    if type_id != b"DIRC":
-        raise AssertionError("Invalid index file header: %r" % type_id)
-    unpacked = cast(Tuple[int, int], unpack(">LL", stream.read(4 * 2)))
-    version, num_entries = unpacked
-
-    assert version in (1, 2, 3), "Unsupported git index version %i, only 1, 2, and 3 are supported" % version
-    return version, num_entries
+    pass
 
 
 def entry_key(*entry: Union[BaseIndexEntry, PathLike, int]) -> Tuple[PathLike, int]:
@@ -252,48 +245,7 @@ def read_cache(
         * *extension_data* is ``""`` or 4 bytes of type + 4 bytes of size + size bytes.
         * *content_sha* is a 20 byte sha on all cache file contents.
     """
-    version, num_entries = read_header(stream)
-    count = 0
-    entries: Dict[Tuple[PathLike, int], "IndexEntry"] = {}
-
-    read = stream.read
-    tell = stream.tell
-    while count < num_entries:
-        beginoffset = tell()
-        ctime = unpack(">8s", read(8))[0]
-        mtime = unpack(">8s", read(8))[0]
-        (dev, ino, mode, uid, gid, size, sha, flags) = unpack(">LLLLLL20sH", read(20 + 4 * 6 + 2))
-        extended_flags = 0
-        if flags & CE_EXTENDED:
-            extended_flags = unpack(">H", read(2))[0]
-        path_size = flags & CE_NAMEMASK
-        path = read(path_size).decode(defenc)
-
-        real_size = (tell() - beginoffset + 8) & ~7
-        read((beginoffset + real_size) - tell())
-        entry = IndexEntry((mode, sha, flags, path, ctime, mtime, dev, ino, uid, gid, size, extended_flags))
-        # entry_key would be the method to use, but we save the effort.
-        entries[(path, entry.stage)] = entry
-        count += 1
-    # END for each entry
-
-    # The footer contains extension data and a sha on the content so far.
-    # Keep the extension footer,and verify we have a sha in the end.
-    # Extension data format is:
-    #   4 bytes ID
-    #   4 bytes length of chunk
-    #   Repeated 0 - N times
-    extension_data = stream.read(~0)
-    assert len(extension_data) > 19, (
-        "Index Footer was not at least a sha on content as it was only %i bytes in size" % len(extension_data)
-    )
-
-    content_sha = extension_data[-20:]
-
-    # Truncate the sha in the end as we will dynamically create it anyway.
-    extension_data = extension_data[:-20]
-
-    return (version, entries, extension_data, content_sha)
+    pass
 
 
 def write_tree_from_cache(
@@ -366,7 +318,7 @@ def write_tree_from_cache(
 
 
 def _tree_entry_to_baseindexentry(tree_entry: "TreeCacheTup", stage: int) -> BaseIndexEntry:
-    return BaseIndexEntry((tree_entry[1], tree_entry[0], stage << CE_STAGESHIFT, tree_entry[2]))
+    pass
 
 
 def aggressive_tree_merge(odb: "GitCmdObjectDB", tree_shas: Sequence[bytes]) -> List[BaseIndexEntry]:
@@ -382,90 +334,4 @@ def aggressive_tree_merge(odb: "GitCmdObjectDB", tree_shas: Sequence[bytes]) -> 
         entries will effectively correspond to the last given tree. If 3 are given, a 3
         way merge is performed.
     """
-    out: List[BaseIndexEntry] = []
-
-    # One and two way is the same for us, as we don't have to handle an existing
-    # index, instrea
-    if len(tree_shas) in (1, 2):
-        for entry in traverse_tree_recursive(odb, tree_shas[-1], ""):
-            out.append(_tree_entry_to_baseindexentry(entry, 0))
-        # END for each entry
-        return out
-    # END handle single tree
-
-    if len(tree_shas) > 3:
-        raise ValueError("Cannot handle %i trees at once" % len(tree_shas))
-
-    # Three trees.
-    for base, ours, theirs in traverse_trees_recursive(odb, tree_shas, ""):
-        if base is not None:
-            # Base version exists.
-            if ours is not None:
-                # Ours exists.
-                if theirs is not None:
-                    # It exists in all branches. Ff it was changed in both
-                    # its a conflict. Otherwise, we take the changed version.
-                    # This should be the most common branch, so it comes first.
-                    if (base[0] != ours[0] and base[0] != theirs[0] and ours[0] != theirs[0]) or (
-                        base[1] != ours[1] and base[1] != theirs[1] and ours[1] != theirs[1]
-                    ):
-                        # Changed by both.
-                        out.append(_tree_entry_to_baseindexentry(base, 1))
-                        out.append(_tree_entry_to_baseindexentry(ours, 2))
-                        out.append(_tree_entry_to_baseindexentry(theirs, 3))
-                    elif base[0] != ours[0] or base[1] != ours[1]:
-                        # Only we changed it.
-                        out.append(_tree_entry_to_baseindexentry(ours, 0))
-                    else:
-                        # Either nobody changed it, or they did. In either
-                        # case, use theirs.
-                        out.append(_tree_entry_to_baseindexentry(theirs, 0))
-                    # END handle modification
-                else:
-                    if ours[0] != base[0] or ours[1] != base[1]:
-                        # They deleted it, we changed it, conflict.
-                        out.append(_tree_entry_to_baseindexentry(base, 1))
-                        out.append(_tree_entry_to_baseindexentry(ours, 2))
-                    # else:
-                    #   # We didn't change it, ignore.
-                    #   pass
-                    # END handle our change
-                # END handle theirs
-            else:
-                if theirs is None:
-                    # Deleted in both, its fine - it's out.
-                    pass
-                else:
-                    if theirs[0] != base[0] or theirs[1] != base[1]:
-                        # Deleted in ours, changed theirs, conflict.
-                        out.append(_tree_entry_to_baseindexentry(base, 1))
-                        out.append(_tree_entry_to_baseindexentry(theirs, 3))
-                    # END theirs changed
-                    # else:
-                    #   # Theirs didn't change.
-                    #   pass
-                # END handle theirs
-            # END handle ours
-        else:
-            # All three can't be None.
-            if ours is None:
-                # Added in their branch.
-                assert theirs is not None
-                out.append(_tree_entry_to_baseindexentry(theirs, 0))
-            elif theirs is None:
-                # Added in our branch.
-                out.append(_tree_entry_to_baseindexentry(ours, 0))
-            else:
-                # Both have it, except for the base, see whether it changed.
-                if ours[0] != theirs[0] or ours[1] != theirs[1]:
-                    out.append(_tree_entry_to_baseindexentry(ours, 2))
-                    out.append(_tree_entry_to_baseindexentry(theirs, 3))
-                else:
-                    # It was added the same in both.
-                    out.append(_tree_entry_to_baseindexentry(ours, 0))
-                # END handle two items
-            # END handle heads
-        # END handle base exists
-    # END for each entries tuple
-
-    return out
+    pass

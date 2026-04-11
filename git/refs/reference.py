@@ -25,15 +25,7 @@ if TYPE_CHECKING:
 def require_remote_ref_path(func: Callable[..., _T]) -> Callable[..., _T]:
     """A decorator raising :exc:`ValueError` if we are not a valid remote, based on the
     path."""
-
-    def wrapper(self: T_References, *args: Any) -> _T:
-        if not self.is_remote():
-            raise ValueError("ref path does not point to a remote reference: %s" % self.path)
-        return func(self, *args)
-
-    # END wrapper
-    wrapper.__name__ = func.__name__
-    return wrapper
+    pass
 
 
 # } END utilities
@@ -124,12 +116,7 @@ class Reference(SymbolicReference, LazyMixin, IterableObj):
         :return:
             (shortest) Name of this reference - it may contain path components
         """
-        # The first two path tokens can be removed as they are
-        # refs/heads or refs/tags or refs/remotes.
-        tokens = self.path.split("/")
-        if len(tokens) < 3:
-            return self.path  # could be refs/HEAD
-        return "/".join(tokens[2:])
+        pass
 
     @classmethod
     def iter_items(
@@ -156,9 +143,7 @@ class Reference(SymbolicReference, LazyMixin, IterableObj):
             Name of the remote we are a reference of, such as ``origin`` for a reference
             named ``origin/master``.
         """
-        tokens = self.path.split("/")
-        # /refs/remotes/<remote name>/<branch_name>
-        return tokens[2]
+        pass
 
     @property
     @require_remote_ref_path
@@ -171,7 +156,6 @@ class Reference(SymbolicReference, LazyMixin, IterableObj):
             The returned name is usually not qualified enough to uniquely identify a
             branch.
         """
-        tokens = self.path.split("/")
-        return "/".join(tokens[3:])
+        pass
 
     # } END remote interface

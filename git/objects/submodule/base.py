@@ -166,25 +166,7 @@ class Submodule(IndexObject, TraversableIterableObj):
             self._name = name
 
     def _set_cache_(self, attr: str) -> None:
-        if attr in ("path", "_url", "_branch_path"):
-            reader: SectionConstraint = self.config_reader()
-            # Default submodule values.
-            try:
-                self.path = reader.get("path")
-            except cp.NoSectionError as e:
-                if self.repo.working_tree_dir is not None:
-                    raise ValueError(
-                        "This submodule instance does not exist anymore in '%s' file"
-                        % osp.join(self.repo.working_tree_dir, ".gitmodules")
-                    ) from e
-
-            self._url = reader.get("url")
-            # GitPython extension values - optional.
-            self._branch_path = reader.get_value(self.k_head_option, git.Head.to_full_path(self.k_head_default))
-        elif attr == "_name":
-            raise AttributeError("Cannot retrieve the name of a submodule if it was not set initially")
-        else:
-            super()._set_cache_(attr)
+        pass
         # END handle attribute name
 
     @classmethod
@@ -1288,37 +1270,7 @@ class Submodule(IndexObject, TraversableIterableObj):
         :return:
             self
         """
-        if commit is None:
-            self._parent_commit = None
-            return self
-        # END handle None
-        pcommit = self.repo.commit(commit)
-        pctree = pcommit.tree
-        if self.k_modules_file not in pctree:
-            raise ValueError("Tree of commit %s did not contain the %s file" % (commit, self.k_modules_file))
-        # END handle exceptions
-
-        prev_pc = self._parent_commit
-        self._parent_commit = pcommit
-
-        if check:
-            parser = self._config_parser(self.repo, self._parent_commit, read_only=True)
-            if not parser.has_section(sm_section(self.name)):
-                self._parent_commit = prev_pc
-                raise ValueError("Submodule at path %r did not exist in parent commit %s" % (self.path, commit))
-            # END handle submodule did not exist
-        # END handle checking mode
-
-        # Update our sha, it could have changed.
-        # If check is False, we might see a parent-commit that doesn't even contain the
-        # submodule anymore. in that case, mark our sha as being NULL.
-        try:
-            self.binsha = pctree[str(self.path)].binsha
-        except KeyError:
-            self.binsha = self.NULL_BIN_SHA
-
-        self._clear_cache()
-        return self
+        pass
 
     @unbare_repo
     def config_writer(
@@ -1502,7 +1454,7 @@ class Submodule(IndexObject, TraversableIterableObj):
             Full repository-relative path as string to the branch we would checkout from
             the remote and track
         """
-        return self._branch_path
+        pass
 
     @property
     def branch_name(self) -> str:
@@ -1510,14 +1462,12 @@ class Submodule(IndexObject, TraversableIterableObj):
         :return:
             The name of the branch, which is the shortest possible branch name
         """
-        # Use an instance method, for this we create a temporary Head instance which
-        # uses a repository that is available at least (it makes no difference).
-        return git.Head(self.repo, self._branch_path).name
+        pass
 
     @property
     def url(self) -> str:
         """:return: The url to the repository our submodule's repository refers to"""
-        return self._url
+        pass
 
     @property
     def parent_commit(self) -> "Commit":
@@ -1529,9 +1479,7 @@ class Submodule(IndexObject, TraversableIterableObj):
         :note:
             Will always point to the current head's commit if it was not set explicitly.
         """
-        if self._parent_commit is None:
-            return self.repo.commit()
-        return self._parent_commit
+        pass
 
     @property
     def name(self) -> str:
@@ -1545,7 +1493,7 @@ class Submodule(IndexObject, TraversableIterableObj):
             in GitPython it should be a unique identifier similar to the identifiers
             used for remotes, which allows to change the path of the submodule easily.
         """
-        return self._name
+        pass
 
     def config_reader(self) -> SectionConstraint[SubmoduleConfigParser]:
         """

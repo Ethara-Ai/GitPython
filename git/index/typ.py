@@ -123,7 +123,7 @@ class BaseIndexEntry(BaseIndexEntryHelper):
     @property
     def hexsha(self) -> str:
         """hex version of our sha"""
-        return b2a_hex(self.binsha).decode("ascii")
+        pass
 
     @property
     def stage(self) -> int:
@@ -137,15 +137,15 @@ class BaseIndexEntry(BaseIndexEntryHelper):
         :note:
             For more information, see :manpage:`git-read-tree(1)`.
         """
-        return (self.flags & CE_STAGEMASK) >> CE_STAGESHIFT
+        pass
 
     @property
     def skip_worktree(self) -> bool:
-        return (self.extended_flags & CE_EXT_SKIP_WORKTREE) > 0
+        pass
 
     @property
     def intent_to_add(self) -> bool:
-        return (self.extended_flags & CE_EXT_INTENT_TO_ADD) > 0
+        pass
 
     @classmethod
     def from_blob(cls, blob: Blob, stage: int = 0) -> "BaseIndexEntry":
@@ -154,7 +154,7 @@ class BaseIndexEntry(BaseIndexEntryHelper):
 
     def to_blob(self, repo: "Repo") -> Blob:
         """:return: Blob using the information of this index entry"""
-        return Blob(repo, self.binsha, self.mode, self.path)
+        pass
 
 
 class IndexEntry(BaseIndexEntry):
@@ -174,12 +174,12 @@ class IndexEntry(BaseIndexEntry):
             Tuple(int_time_seconds_since_epoch, int_nano_seconds) of the
             file's creation time
         """
-        return cast(Tuple[int, int], unpack(">LL", self.ctime_bytes))
+        pass
 
     @property
     def mtime(self) -> Tuple[int, int]:
         """See :attr:`ctime` property, but returns modification time."""
-        return cast(Tuple[int, int], unpack(">LL", self.mtime_bytes))
+        pass
 
     @classmethod
     def from_base(cls, base: "BaseIndexEntry") -> "IndexEntry":

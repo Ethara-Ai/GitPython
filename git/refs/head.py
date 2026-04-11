@@ -54,7 +54,7 @@ class HEAD(SymbolicReference):
             :class:`~git.refs.symbolic.SymbolicReference` pointing at the ORIG_HEAD,
             which is maintained to contain the previous value of HEAD.
         """
-        return SymbolicReference(self.repo, self._ORIG_HEAD_NAME)
+        pass
 
     def reset(
         self,
@@ -152,10 +152,7 @@ class Head(Reference):
             If ``True``, the heads will be deleted even if they are not yet merged into
             the main development stream. Default ``False``.
         """
-        flag = "-d"
-        if force:
-            flag = "-D"
-        repo.git.branch(flag, *heads)
+        pass
 
     def set_tracking_branch(self, remote_reference: Union["RemoteReference", None]) -> "Head":
         """Configure this branch to track the given remote reference. This will

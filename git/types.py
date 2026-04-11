@@ -151,19 +151,7 @@ Instead of this type:
 
 
 def _getattr(name: str) -> Any:
-    if name != "Lit_commit_ish":
-        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
-
-    warnings.warn(
-        "Lit_commit_ish is deprecated. It is currently defined as "
-        '`Literal["commit", "tag"]`, which should be used in its place if desired. It '
-        'had previously been defined as `Literal["commit", "tag", "blob", "tree"]`, '
-        "covering all four git object type strings including those that are never "
-        "commit-ish. For that, use the GitObjectTypeString type instead.",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    return Literal["commit", "tag"]
+    pass
 
 
 if not TYPE_CHECKING:  # Preserve static checking for undefined/misspelled attributes.

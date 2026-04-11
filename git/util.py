@@ -165,19 +165,7 @@ T = TypeVar("T")
 def unbare_repo(func: Callable[..., T]) -> Callable[..., T]:
     """Methods with this decorator raise :exc:`~git.exc.InvalidGitRepositoryError` if
     they encounter a bare repository."""
-
-    from .exc import InvalidGitRepositoryError
-
-    @wraps(func)
-    def wrapper(self: "Remote", *args: Any, **kwargs: Any) -> T:
-        if self.repo.bare:
-            raise InvalidGitRepositoryError("Method '%s' cannot operate on bare repositories" % func.__name__)
-        # END bare method
-        return func(self, *args, **kwargs)
-
-    # END wrapper
-
-    return wrapper
+    pass
 
 
 @contextlib.contextmanager
@@ -198,15 +186,7 @@ def cwd(new_dir: PathLike) -> Generator[PathLike, None, None]:
 @contextlib.contextmanager
 def patch_env(name: str, value: str) -> Generator[None, None, None]:
     """Context manager to temporarily patch an environment variable."""
-    old_value = os.getenv(name)
-    os.environ[name] = value
-    try:
-        yield
-    finally:
-        if old_value is None:
-            del os.environ[name]
-        else:
-            os.environ[name] = old_value
+    pass
 
 
 def rmtree(path: PathLike) -> None:
@@ -290,8 +270,7 @@ def join_path(a: PathLike, *p: PathLike) -> PathLike:
 if sys.platform == "win32":
 
     def to_native_path_windows(path: PathLike) -> PathLike:
-        path = os.fspath(path)
-        return path.replace("/", "\\")
+        pass
 
     def to_native_path_linux(path: PathLike) -> str:
         path = os.fspath(path)
@@ -438,13 +417,7 @@ _decygpath_regex = re.compile(r"(?:/proc)?/cygdrive/(\w)(/.*)?")
 
 
 def decygpath(path: PathLike) -> str:
-    path = os.fspath(path)
-    m = _decygpath_regex.match(path)
-    if m:
-        drive, rest_path = m.groups()
-        path = "%s:%s" % (drive.upper(), rest_path or "")
-
-    return path.replace("/", "\\")
+    pass
 
 
 #: Store boolean flags denoting if a specific Git executable
@@ -855,7 +828,7 @@ class Actor:
             return user_id
 
         def default_name() -> str:
-            return default_email().split("@")[0]
+            pass
 
         for attr, evar, cvar, default in (
             ("name", env_name, cls.conf_name, default_name),
@@ -941,27 +914,7 @@ class Stats:
         :return:
             :class:`git.Stats`
         """
-
-        hsh: HSH_TD = {
-            "total": {"insertions": 0, "deletions": 0, "lines": 0, "files": 0},
-            "files": {},
-        }
-        for line in text.splitlines():
-            (change_type, raw_insertions, raw_deletions, filename) = line.split("\t")
-            insertions = raw_insertions != "-" and int(raw_insertions) or 0
-            deletions = raw_deletions != "-" and int(raw_deletions) or 0
-            hsh["total"]["insertions"] += insertions
-            hsh["total"]["deletions"] += deletions
-            hsh["total"]["lines"] += insertions + deletions
-            hsh["total"]["files"] += 1
-            files_dict: Files_TD = {
-                "insertions": insertions,
-                "deletions": deletions,
-                "lines": insertions + deletions,
-                "change_type": change_type,
-            }
-            hsh["files"][filename.strip()] = files_dict
-        return Stats(hsh["total"], hsh["files"])
+        pass
 
 
 class IndexFileSHA1Writer:

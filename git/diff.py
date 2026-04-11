@@ -97,26 +97,11 @@ _octal_byte_re = re.compile(rb"\\([0-9]{3})")
 
 
 def _octal_repl(matchobj: Match) -> bytes:
-    value = matchobj.group(1)
-    value = int(value, 8)
-    value = bytes(bytearray((value,)))
-    return value
+    pass
 
 
 def decode_path(path: bytes, has_ab_prefix: bool = True) -> Optional[bytes]:
-    if path == b"/dev/null":
-        return None
-
-    if path.startswith(b'"') and path.endswith(b'"'):
-        path = path[1:-1].replace(b"\\n", b"\n").replace(b"\\t", b"\t").replace(b'\\"', b'"').replace(b"\\\\", b"\\")
-
-    path = _octal_byte_re.sub(_octal_repl, path)
-
-    if has_ab_prefix:
-        assert path.startswith(b"a/") or path.startswith(b"b/")
-        path = path[2:]
-
-    return path
+    pass
 
 
 class Diffable:
@@ -314,22 +299,7 @@ class DiffIndex(List[T_Diff]):
             * 'M' for paths with modified data
             * 'T' for changed in the type paths
         """
-        if change_type not in self.change_type:
-            raise ValueError("Invalid change type: %s" % change_type)
-
-        for diffidx in self:
-            if diffidx.change_type == change_type:
-                yield diffidx
-            elif change_type == "A" and diffidx.new_file:
-                yield diffidx
-            elif change_type == "D" and diffidx.deleted_file:
-                yield diffidx
-            elif change_type == "C" and diffidx.copied_file:
-                yield diffidx
-            elif change_type == "R" and diffidx.renamed_file:
-                yield diffidx
-            elif change_type == "M" and diffidx.a_blob and diffidx.b_blob and diffidx.a_blob != diffidx.b_blob:
-                yield diffidx
+        pass
         # END for each diff
 
 
@@ -531,19 +501,19 @@ class Diff:
 
     @property
     def a_path(self) -> Optional[str]:
-        return self.a_rawpath.decode(defenc, "replace") if self.a_rawpath else None
+        pass
 
     @property
     def b_path(self) -> Optional[str]:
-        return self.b_rawpath.decode(defenc, "replace") if self.b_rawpath else None
+        pass
 
     @property
     def rename_from(self) -> Optional[str]:
-        return self.raw_rename_from.decode(defenc, "replace") if self.raw_rename_from else None
+        pass
 
     @property
     def rename_to(self) -> Optional[str]:
-        return self.raw_rename_to.decode(defenc, "replace") if self.raw_rename_to else None
+        pass
 
     @property
     def renamed(self) -> bool:
@@ -556,30 +526,16 @@ class Diff:
             This property is deprecated.
             Please use the :attr:`renamed_file` property instead.
         """
-        warnings.warn(
-            "Diff.renamed is deprecated, use Diff.renamed_file instead",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.renamed_file
+        pass
 
     @property
     def renamed_file(self) -> bool:
         """:return: ``True`` if the blob of our diff has been renamed"""
-        return self.rename_from != self.rename_to
+        pass
 
     @classmethod
     def _pick_best_path(cls, path_match: bytes, rename_match: bytes, path_fallback_match: bytes) -> Optional[bytes]:
-        if path_match:
-            return decode_path(path_match)
-
-        if rename_match:
-            return decode_path(rename_match, has_ab_prefix=False)
-
-        if path_fallback_match:
-            return decode_path(path_fallback_match)
-
-        return None
+        pass
 
     @classmethod
     def _index_from_patch_format(cls, repo: "Repo", proc: Union["Popen", "Git.AutoInterrupt"]) -> DiffIndex["Diff"]:
@@ -596,156 +552,11 @@ class Diff:
         :return:
             :class:`DiffIndex`
         """
-
-        # FIXME: Here SLURPING raw, need to re-phrase header-regexes linewise.
-        text_list: List[bytes] = []
-        handle_process_output(proc, text_list.append, None, finalize_process, decode_streams=False)
-
-        # For now, we have to bake the stream.
-        text = b"".join(text_list)
-        index: "DiffIndex" = DiffIndex()
-        previous_header: Union[Match[bytes], None] = None
-        header: Union[Match[bytes], None] = None
-        a_path, b_path = None, None  # For mypy.
-        a_mode, b_mode = None, None  # For mypy.
-        for _header in cls.re_header.finditer(text):
-            (
-                a_path_fallback,
-                b_path_fallback,
-                old_mode,
-                new_mode,
-                rename_from,
-                rename_to,
-                new_file_mode,
-                deleted_file_mode,
-                copied_file_name,
-                a_blob_id,
-                b_blob_id,
-                b_mode,
-                a_path,
-                b_path,
-            ) = _header.groups()
-
-            new_file, deleted_file, copied_file = (
-                bool(new_file_mode),
-                bool(deleted_file_mode),
-                bool(copied_file_name),
-            )
-
-            a_path = cls._pick_best_path(a_path, rename_from, a_path_fallback)
-            b_path = cls._pick_best_path(b_path, rename_to, b_path_fallback)
-
-            # Our only means to find the actual text is to see what has not been matched
-            # by our regex, and then retro-actively assign it to our index.
-            if previous_header is not None:
-                index[-1].diff = text[previous_header.end() : _header.start()]
-            # END assign actual diff
-
-            # Make sure the mode is set if the path is set. Otherwise the resulting blob
-            # is invalid. We just use the one mode we should have parsed.
-            a_mode = old_mode or deleted_file_mode or (a_path and (b_mode or new_mode or new_file_mode))
-            b_mode = b_mode or new_mode or new_file_mode or (b_path and a_mode)
-            index.append(
-                Diff(
-                    repo,
-                    a_path,
-                    b_path,
-                    a_blob_id and a_blob_id.decode(defenc),
-                    b_blob_id and b_blob_id.decode(defenc),
-                    a_mode and a_mode.decode(defenc),
-                    b_mode and b_mode.decode(defenc),
-                    new_file,
-                    deleted_file,
-                    copied_file,
-                    rename_from,
-                    rename_to,
-                    None,
-                    None,
-                    None,
-                )
-            )
-
-            previous_header = _header
-            header = _header
-        # END for each header we parse
-        if index and header:
-            index[-1].diff = text[header.end() :]
-        # END assign last diff
-
-        return index
+        pass
 
     @staticmethod
     def _handle_diff_line(lines_bytes: bytes, repo: "Repo", index: DiffIndex["Diff"]) -> None:
-        lines = lines_bytes.decode(defenc)
-
-        # Discard everything before the first colon, and the colon itself.
-        _, _, lines = lines.partition(":")
-
-        for line in lines.split("\x00:"):
-            if not line:
-                # The line data is empty, skip.
-                continue
-            meta, _, path = line.partition("\x00")
-            path = path.rstrip("\x00")
-            a_blob_id: Optional[str]
-            b_blob_id: Optional[str]
-            old_mode, new_mode, a_blob_id, b_blob_id, _change_type = meta.split(None, 4)
-            # Change type can be R100
-            # R: status letter
-            # 100: score (in case of copy and rename)
-            change_type: Lit_change_type = cast(Lit_change_type, _change_type[0])
-            score_str = "".join(_change_type[1:])
-            score = int(score_str) if score_str.isdigit() else None
-            path = path.strip("\n")
-            a_path = path.encode(defenc)
-            b_path = path.encode(defenc)
-            deleted_file = False
-            new_file = False
-            copied_file = False
-            rename_from = None
-            rename_to = None
-
-            # NOTE: We cannot conclude from the existence of a blob to change type,
-            # as diffs with the working do not have blobs yet.
-            if change_type == "D":
-                b_blob_id = None  # Optional[str]
-                deleted_file = True
-            elif change_type == "A":
-                a_blob_id = None
-                new_file = True
-            elif change_type == "C":
-                copied_file = True
-                a_path_str, b_path_str = path.split("\x00", 1)
-                a_path = a_path_str.encode(defenc)
-                b_path = b_path_str.encode(defenc)
-            elif change_type == "R":
-                a_path_str, b_path_str = path.split("\x00", 1)
-                a_path = a_path_str.encode(defenc)
-                b_path = b_path_str.encode(defenc)
-                rename_from, rename_to = a_path, b_path
-            elif change_type == "T":
-                # Nothing to do.
-                pass
-            # END add/remove handling
-
-            diff = Diff(
-                repo,
-                a_path,
-                b_path,
-                a_blob_id,
-                b_blob_id,
-                old_mode,
-                new_mode,
-                new_file,
-                deleted_file,
-                copied_file,
-                rename_from,
-                rename_to,
-                "",
-                change_type,
-                score,
-            )
-            index.append(diff)
+        pass
 
     @classmethod
     def _index_from_raw_format(cls, repo: "Repo", proc: "Popen") -> "DiffIndex[Diff]":
@@ -761,16 +572,4 @@ class Diff:
         :return:
             :class:`DiffIndex`
         """
-        # handles
-        # :100644 100644 687099101... 37c5e30c8... M    .gitignore
-
-        index: "DiffIndex" = DiffIndex()
-        handle_process_output(
-            proc,
-            lambda byt: cls._handle_diff_line(byt, repo, index),
-            None,
-            finalize_process,
-            decode_streams=False,
-        )
-
-        return index
+        pass

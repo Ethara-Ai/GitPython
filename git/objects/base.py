@@ -131,7 +131,7 @@ class Object(LazyMixin):
             This cannot be a ``__new__`` method as it would always call :meth:`__init__`
             with the input id which is not necessarily a binsha.
         """
-        return repo.rev_parse(str(id))
+        pass
 
     @classmethod
     def new_from_sha(cls, repo: "Repo", sha1: bytes) -> AnyGitObject:
@@ -153,11 +153,7 @@ class Object(LazyMixin):
 
     def _set_cache_(self, attr: str) -> None:
         """Retrieve object information."""
-        if attr == "size":
-            oinfo = self.repo.odb.info(self.binsha)
-            self.size = oinfo.size  # type: int
-        else:
-            super()._set_cache_(attr)
+        pass
 
     def __eq__(self, other: Any) -> bool:
         """:return: ``True`` if the objects have the same SHA1"""
@@ -186,8 +182,7 @@ class Object(LazyMixin):
     @property
     def hexsha(self) -> str:
         """:return: 40 byte hex version of our 20 byte binary sha"""
-        # b2a_hex produces bytes.
-        return bin_to_hex(self.binsha).decode("ascii")
+        pass
 
     @property
     def data_stream(self) -> "OStream":
@@ -198,7 +193,7 @@ class Object(LazyMixin):
         :note:
             Returned streams must be read in order.
         """
-        return self.repo.odb.stream(self.binsha)
+        pass
 
     def stream_data(self, ostream: "OStream") -> "Object":
         """Write our data directly to the given output stream.
@@ -209,9 +204,7 @@ class Object(LazyMixin):
         :return:
             self
         """
-        istream = self.repo.odb.stream(self.binsha)
-        stream_copy(istream, ostream)
-        return self
+        pass
 
 
 class IndexObject(Object):
@@ -270,20 +263,13 @@ class IndexObject(Object):
         return hash(self.path)
 
     def _set_cache_(self, attr: str) -> None:
-        if attr in IndexObject.__slots__:
-            # They cannot be retrieved later on (not without searching for them).
-            raise AttributeError(
-                "Attribute '%s' unset: path and mode attributes must have been set during %s object creation"
-                % (attr, type(self).__name__)
-            )
-        else:
-            super()._set_cache_(attr)
+        pass
         # END handle slot attribute
 
     @property
     def name(self) -> str:
         """:return: Name portion of the path, effectively being the basename"""
-        return osp.basename(self.path)
+        pass
 
     @property
     def abspath(self) -> PathLike:

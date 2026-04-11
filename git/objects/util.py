@@ -65,7 +65,7 @@ else:
     Protocol = ABC
 
     def runtime_checkable(f):
-        return f
+        pass
 
 
 class TraverseNT(NamedTuple):
@@ -100,12 +100,7 @@ def mode_str_to_int(modestr: Union[bytes, str]) -> int:
         module regarding the rwx permissions for user, group and other, special flags
         and file system flags, such as whether it is a symlink.
     """
-    mode = 0
-    for iteration, char in enumerate(reversed(modestr[-6:])):
-        char = cast(Union[str, int], char)
-        mode += int(char) << iteration * 3
-    # END for each char
-    return mode
+    pass
 
 
 def get_object_type_by_name(
@@ -199,10 +194,10 @@ class tzoffset(tzinfo):
         return self._offset
 
     def tzname(self, dt: Union[datetime, None]) -> str:
-        return self._name
+        pass
 
     def dst(self, dt: Union[datetime, None]) -> timedelta:
-        return ZERO
+        pass
 
 
 utc = tzoffset(0, "UTC")
@@ -211,12 +206,7 @@ utc = tzoffset(0, "UTC")
 def from_timestamp(timestamp: float, tz_offset: float) -> datetime:
     """Convert a `timestamp` + `tz_offset` into an aware :class:`~datetime.datetime`
     instance."""
-    utc_dt = datetime.fromtimestamp(timestamp, utc)
-    try:
-        local_dt = utc_dt.astimezone(tzoffset(tz_offset))
-        return local_dt
-    except ValueError:
-        return utc_dt
+    pass
 
 
 def parse_date(string_date: Union[str, datetime]) -> Tuple[int, int]:
@@ -331,14 +321,7 @@ def parse_actor_and_date(line: str) -> Tuple[Actor, int, int]:
     :return:
         [Actor, int_seconds_since_epoch, int_timezone_offset]
     """
-    actor, epoch, offset = "", "0", "0"
-    m = _re_actor_epoch.search(line)
-    if m:
-        actor, epoch, offset = m.groups()
-    else:
-        m = _re_only_actor.search(line)
-        actor = m.group(1) if m else line or ""
-    return (Actor._from_string(actor), int(epoch), utctz_to_altz(offset))
+    pass
 
 
 # } END functions
@@ -426,27 +409,7 @@ class Traversable(Protocol):
                 Submodule ->  IterableList[Submodule]
                 Tree -> IterableList[Union[Submodule, Tree, Blob]]
         """
-        # Commit and Submodule have id.__attribute__ as IterableObj.
-        # Tree has id.__attribute__ inherited from IndexObject.
-        if isinstance(self, Has_id_attribute):
-            id = self._id_attribute_
-        else:
-            # Shouldn't reach here, unless Traversable subclass created with no
-            # _id_attribute_.
-            id = ""
-            # Could add _id_attribute_ to Traversable, or make all Traversable also
-            # Iterable?
-
-        if not as_edge:
-            out: IterableList[Union["Commit", "Submodule", "Tree", "Blob"]] = IterableList(id)
-            out.extend(self.traverse(as_edge=as_edge, *args, **kwargs))  # noqa: B026
-            return out
-            # Overloads in subclasses (mypy doesn't allow typing self: subclass).
-            # Union[IterableList['Commit'], IterableList['Submodule'], IterableList[Union['Submodule', 'Tree', 'Blob']]]
-        else:
-            # Raise DeprecationWarning, it doesn't make sense to use this.
-            out_list: IterableList = IterableList(self.traverse(*args, **kwargs))
-            return out_list
+        pass
 
     @abstractmethod
     def traverse(self, *args: Any, **kwargs: Any) -> Any:
@@ -617,7 +580,7 @@ class TraversableIterableObj(IterableObj, Traversable):
     TIobj_tuple = Tuple[Union[T_TIobj, None], T_TIobj]
 
     def list_traverse(self: T_TIobj, *args: Any, **kwargs: Any) -> IterableList[T_TIobj]:
-        return super()._list_traverse(*args, **kwargs)
+        pass
 
     @overload
     def traverse(self: T_TIobj) -> Iterator[T_TIobj]: ...

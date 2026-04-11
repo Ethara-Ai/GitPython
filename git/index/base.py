@@ -151,23 +151,7 @@ class IndexFile(LazyMixin, git_diff.Diffable, Serializable):
         self._file_path: PathLike = file_path or self._index_path()
 
     def _set_cache_(self, attr: str) -> None:
-        if attr == "entries":
-            try:
-                fd = os.open(self._file_path, os.O_RDONLY)
-            except OSError:
-                # In new repositories, there may be no index, which means we are empty.
-                self.entries: Dict[Tuple[PathLike, StageType], IndexEntry] = {}
-                return
-            # END exception handling
-
-            try:
-                stream = file_contents_ro(fd, stream=True, allow_mmap=True)
-            finally:
-                os.close(fd)
-
-            self._deserialize(stream)
-        else:
-            super()._set_cache_(attr)
+        pass
 
     def _index_path(self) -> PathLike:
         if self.repo.git_dir:
@@ -194,8 +178,7 @@ class IndexFile(LazyMixin, git_diff.Diffable, Serializable):
 
     def _deserialize(self, stream: IO) -> "IndexFile":
         """Initialize this instance with index values read from the given stream."""
-        self.version, self.entries, self._extension_data, _conten_sha = read_cache(stream)
-        return self
+        pass
 
     def _entries_sorted(self) -> List[IndexEntry]:
         """:return: List of entries, in a sorted fashion, first by path, then by stage"""
@@ -277,16 +260,7 @@ class IndexFile(LazyMixin, git_diff.Diffable, Serializable):
             yourself, you have to commit the changed index (or make a valid tree from
             it) and retry with a three-way :meth:`index.from_tree <from_tree>` call.
         """
-        # -i : ignore working tree status
-        # --aggressive : handle more merge cases
-        # -m : do an actual merge
-        args: List[Union[Treeish, str]] = ["--aggressive", "-i", "-m"]
-        if base is not None:
-            args.append(base)
-        args.append(rhs)
-
-        self.repo.git.read_tree(args)
-        return self
+        pass
 
     @classmethod
     def new(cls, repo: "Repo", *tree_sha: Union[str, Tree]) -> "IndexFile":
@@ -305,20 +279,7 @@ class IndexFile(LazyMixin, git_diff.Diffable, Serializable):
             If you intend to write such a merged Index, supply an alternate
             ``file_path`` to its :meth:`write` method.
         """
-        tree_sha_bytes: List[bytes] = [to_bin_sha(str(t)) for t in tree_sha]
-        base_entries = aggressive_tree_merge(repo.odb, tree_sha_bytes)
-
-        inst = cls(repo)
-        # Convert to entries dict.
-        entries: Dict[Tuple[PathLike, int], IndexEntry] = dict(
-            zip(
-                ((e.path, e.stage) for e in base_entries),
-                (IndexEntry.from_base(e) for e in base_entries),
-            )
-        )
-
-        inst.entries = entries
-        return inst
+        pass
 
     @classmethod
     def from_tree(cls, repo: "Repo", *treeish: Treeish, **kwargs: Any) -> "IndexFile":
@@ -511,12 +472,7 @@ class IndexFile(LazyMixin, git_diff.Diffable, Serializable):
             the iterator. A default filter, the :class:`~git.index.typ.BlobFilter`, allows you
             to yield blobs only if they match a given list of paths.
         """
-        for entry in self.entries.values():
-            blob = entry.to_blob(self.repo)
-            blob.size = entry.size
-            output = (entry.stage, blob)
-            if predicate(output):
-                yield output
+        pass
         # END for each entry
 
     def unmerged_blobs(self) -> Dict[PathLike, List[Tuple[StageType, Blob]]]:
@@ -530,18 +486,7 @@ class IndexFile(LazyMixin, git_diff.Diffable, Serializable):
             stage. That is, a file removed on the 'other' branch whose entries are at
             stage 3 will not have a stage 3 entry.
         """
-
-        def is_unmerged_blob(t: Tuple[StageType, Blob]) -> bool:
-            return t[0] != 0
-
-        path_map: Dict[PathLike, List[Tuple[StageType, Blob]]] = {}
-        for stage, blob in self.iter_blobs(is_unmerged_blob):
-            path_map.setdefault(blob.path, []).append((stage, blob))
-        # END for each unmerged blob
-        for line in path_map.values():
-            line.sort()
-
-        return path_map
+        pass
 
     @classmethod
     def entry_key(cls, *entry: Union[BaseIndexEntry, PathLike, StageType]) -> Tuple[PathLike, StageType]:
@@ -566,25 +511,7 @@ class IndexFile(LazyMixin, git_diff.Diffable, Serializable):
             You will have to write the index manually once you are done, i.e.
             ``index.resolve_blobs(blobs).write()``.
         """
-        for blob in iter_blobs:
-            stage_null_key = (blob.path, 0)
-            if stage_null_key in self.entries:
-                raise ValueError("Path %r already exists at stage 0" % str(blob.path))
-            # END assert blob is not stage 0 already
-
-            # Delete all possible stages.
-            for stage in (1, 2, 3):
-                try:
-                    del self.entries[(blob.path, stage)]
-                except KeyError:
-                    pass
-                # END ignore key errors
-            # END for each possible stage
-
-            self.entries[stage_null_key] = IndexEntry.from_blob(blob)
-        # END for each blob
-
-        return self
+        pass
 
     def update(self) -> "IndexFile":
         """Reread the contents of our index file, discarding all cached information
@@ -1347,7 +1274,7 @@ class IndexFile(LazyMixin, git_diff.Diffable, Serializable):
 
             # FIXME: Reading from GIL!
             def make_exc() -> GitCommandError:
-                return GitCommandError(("git-checkout-index", *args), 128, proc.stderr.read())
+                pass
 
             checked_out_files: List[PathLike] = []
 

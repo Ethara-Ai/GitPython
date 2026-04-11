@@ -104,7 +104,7 @@ class SymbolicReference:
             In case of symbolic references, the shortest assumable name is the path
             itself.
         """
-        return os.fspath(self.path)
+        pass
 
     @property
     def abspath(self) -> PathLike:
@@ -400,11 +400,11 @@ class SymbolicReference:
     @property
     def object(self) -> AnyGitObject:
         """Return the object our ref currently refers to"""
-        return self._get_object()
+        pass
 
     @object.setter
     def object(self, object: Union[AnyGitObject, "SymbolicReference", str]) -> "SymbolicReference":
-        return self.set_object(object)
+        pass
 
     def _get_reference(self) -> "Reference":
         """
@@ -505,11 +505,11 @@ class SymbolicReference:
     # Aliased reference
     @property
     def reference(self) -> "Reference":
-        return self._get_reference()
+        pass
 
     @reference.setter
     def reference(self, ref: Union[AnyGitObject, "SymbolicReference", str]) -> "SymbolicReference":
-        return self.set_reference(ref)
+        pass
 
     ref = reference
 
@@ -519,12 +519,7 @@ class SymbolicReference:
             ``True`` if the reference is valid, hence it can be read and points to a
             valid object or reference.
         """
-        try:
-            self.object  # noqa: B018
-        except (OSError, ValueError):
-            return False
-        else:
-            return True
+        pass
 
     @property
     def is_detached(self) -> bool:
@@ -533,11 +528,7 @@ class SymbolicReference:
             ``True`` if we are a detached reference, hence we point to a specific commit
             instead to another reference.
         """
-        try:
-            self.ref  # noqa: B018
-            return False
-        except TypeError:
-            return True
+        pass
 
     def log(self) -> "RefLog":
         """
@@ -549,7 +540,7 @@ class SymbolicReference:
             As the log is parsed every time, its recommended to cache it for use instead
             of calling this method repeatedly. It should be considered read-only.
         """
-        return RefLog.from_file(RefLog.path(self))
+        pass
 
     def log_append(
         self,
@@ -631,52 +622,7 @@ class SymbolicReference:
             just ``myreference``, hence ``refs/`` is implied.
             Alternatively the symbolic reference to be deleted.
         """
-        full_ref_path = cls.to_full_path(path)
-        abs_path = os.path.join(repo.common_dir, full_ref_path)
-        if os.path.exists(abs_path):
-            os.remove(abs_path)
-        else:
-            # Check packed refs.
-            pack_file_path = cls._get_packed_refs_path(repo)
-            try:
-                with open(pack_file_path, "rb") as reader:
-                    new_lines = []
-                    made_change = False
-                    dropped_last_line = False
-                    for line_bytes in reader:
-                        line = line_bytes.decode(defenc)
-                        _, _, line_ref = line.partition(" ")
-                        line_ref = line_ref.strip()
-                        # Keep line if it is a comment or if the ref to delete is not in
-                        # the line.
-                        # If we deleted the last line and this one is a tag-reference
-                        # object, we drop it as well.
-                        if (line.startswith("#") or full_ref_path != line_ref) and (
-                            not dropped_last_line or dropped_last_line and not line.startswith("^")
-                        ):
-                            new_lines.append(line)
-                            dropped_last_line = False
-                            continue
-                        # END skip comments and lines without our path
-
-                        # Drop this line.
-                        made_change = True
-                        dropped_last_line = True
-
-                # Write the new lines.
-                if made_change:
-                    # Binary writing is required, otherwise Windows will open the file
-                    # in text mode and change LF to CRLF!
-                    with open(pack_file_path, "wb") as fd:
-                        fd.writelines(line.encode(defenc) for line in new_lines)
-
-            except OSError:
-                pass  # It didn't exist at all.
-
-        # Delete the reflog.
-        reflog_path = RefLog.path(cls(repo, full_ref_path))
-        if os.path.isfile(reflog_path):
-            os.remove(reflog_path)
+        pass
         # END remove reflog
 
     @classmethod
@@ -931,4 +877,4 @@ class SymbolicReference:
 
     def is_remote(self) -> bool:
         """:return: True if this symbolic reference points to a remote branch"""
-        return os.fspath(self.path).startswith(self._remote_common_path_default + "/")
+        pass

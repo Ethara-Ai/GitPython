@@ -153,23 +153,7 @@ def handle_process_output(
         is_decode: bool,
         handler: Union[None, Callable[[Union[bytes, str]], None]],
     ) -> None:
-        try:
-            for line in stream:
-                if handler:
-                    if is_decode:
-                        assert isinstance(line, bytes)
-                        line_str = line.decode(defenc)
-                        handler(line_str)
-                    else:
-                        handler(line)
-
-        except Exception as ex:
-            _logger.error(f"Pumping {name!r} of cmd({remove_password_if_present(cmdline)}) failed due to: {ex!r}")
-            if "I/O operation on closed file" not in str(ex):
-                # Only reraise if the error was not due to the stream closing.
-                raise CommandError([f"<{name}-pump>"] + remove_password_if_present(cmdline), ex) from ex
-        finally:
-            stream.close()
+        pass
 
     if hasattr(process, "proc"):
         process = cast("Git.AutoInterrupt", process)
@@ -263,33 +247,7 @@ if sys.platform == "win32":
             unpredictable results. See comments in:
             https://github.com/gitpython-developers/GitPython/pull/1650
         """
-        # CREATE_NEW_PROCESS_GROUP is needed for some ways of killing it afterwards.
-        # https://docs.python.org/3/library/subprocess.html#subprocess.Popen.send_signal
-        # https://docs.python.org/3/library/subprocess.html#subprocess.CREATE_NEW_PROCESS_GROUP
-        creationflags = subprocess.CREATE_NO_WINDOW | subprocess.CREATE_NEW_PROCESS_GROUP
-
-        # When using a shell, the shell is the direct subprocess, so the variable must
-        # be set in its environment, to affect its search behavior.
-        if shell:
-            # The original may be immutable, or the caller may reuse it. Mutate a copy.
-            env = {} if env is None else dict(env)
-            env["NoDefaultCurrentDirectoryInExePath"] = "1"  # The "1" can be any value.
-
-        # When not using a shell, the current process does the search in a
-        # CreateProcessW API call, so the variable must be set in our environment. With
-        # a shell, that's unnecessary if https://github.com/python/cpython/issues/101283
-        # is patched. In Python versions where it is unpatched, in the rare case the
-        # ComSpec environment variable is unset, the search for the shell itself is
-        # unsafe. Setting NoDefaultCurrentDirectoryInExePath in all cases, as done here,
-        # is simpler and protects against that. (As above, the "1" can be any value.)
-        with patch_env("NoDefaultCurrentDirectoryInExePath", "1"):
-            return Popen(
-                command,
-                shell=shell,
-                env=env,
-                creationflags=creationflags,
-                **kwargs,
-            )
+        pass
 
     safer_popen = _safer_popen_windows
 else:
@@ -301,14 +259,11 @@ def dashify(string: str) -> str:
 
 
 def slots_to_dict(self: "Git", exclude: Sequence[str] = ()) -> Dict[str, Any]:
-    return {s: getattr(self, s) for s in self.__slots__ if s not in exclude}
+    pass
 
 
 def dict_to_slots_and__excluded_are_none(self: object, d: Mapping[str, Any], excluded: Sequence[str] = ()) -> None:
-    for k, v in d.items():
-        setattr(self, k, v)
-    for k in excluded:
-        setattr(self, k, None)
+    pass
 
 
 ## -- End Utilities -- @}
@@ -569,14 +524,10 @@ class _GitMeta(type):
     """
 
     def __getattribute(cls, name: str) -> Any:
-        if name == "USE_SHELL":
-            _warn_use_shell(extra_danger=False)
-        return super().__getattribute__(name)
+        pass
 
     def __setattr(cls, name: str, value: Any) -> Any:
-        if name == "USE_SHELL":
-            _warn_use_shell(extra_danger=value)
-        super().__setattr__(name, value)
+        pass
 
     if not TYPE_CHECKING:
         # To preserve static checking for undefined/misspelled attributes while letting
@@ -1015,13 +966,12 @@ class Git(metaclass=_GitMeta):
             These arguments are passed as in :meth:`_call_process`, but will be passed
             to the git command rather than the subcommand.
         """
-
-        self._persistent_git_options = self.transform_kwargs(split_single_char_options=True, **kwargs)
+        pass
 
     @property
     def working_dir(self) -> Union[None, PathLike]:
         """:return: Git directory we are working on"""
-        return self._working_dir
+        pass
 
     @property
     def version_info(self) -> Tuple[int, ...]:
@@ -1032,24 +982,7 @@ class Git(metaclass=_GitMeta):
 
             This value is generated on demand and is cached.
         """
-        # Refreshing is global, but version_info caching is per-instance.
-        refresh_token = self._refresh_token  # Copy token in case of concurrent refresh.
-
-        # Use the cached version if obtained after the most recent refresh.
-        if self._version_info_token is refresh_token:
-            assert self._version_info is not None, "Bug: corrupted token-check state"
-            return self._version_info
-
-        # Run "git version" and parse it.
-        process_version = self._call_process("version")
-        version_string = process_version.split(" ")[2]
-        version_fields = version_string.split(".")[:4]
-        leading_numeric_fields = itertools.takewhile(str.isdigit, version_fields)
-        self._version_info = tuple(map(int, leading_numeric_fields))
-
-        # This value will be considered valid until the next refresh.
-        self._version_info_token = refresh_token
-        return self._version_info
+        pass
 
     @overload
     def execute(
@@ -1312,28 +1245,7 @@ class Git(metaclass=_GitMeta):
 
                 This callback implementation would be ineffective and unsafe on Windows.
                 """
-                p = Popen(["ps", "--ppid", str(pid)], stdout=PIPE)
-                child_pids = []
-                if p.stdout is not None:
-                    for line in p.stdout:
-                        if len(line.split()) > 0:
-                            local_pid = (line.split())[0]
-                            if local_pid.isdigit():
-                                child_pids.append(int(local_pid))
-                try:
-                    os.kill(pid, signal.SIGKILL)
-                    for child_pid in child_pids:
-                        try:
-                            os.kill(child_pid, signal.SIGKILL)
-                        except OSError:
-                            pass
-                    # Tell the main routine that the process was killed.
-                    kill_check.set()
-                except OSError:
-                    # It is possible that the process gets completed in the duration
-                    # after timeout happens and before we try to kill the process.
-                    pass
-                return
+                pass
 
             def communicate() -> Tuple[AnyStr, AnyStr]:
                 watchdog.start()
@@ -1462,11 +1374,7 @@ class Git(metaclass=_GitMeta):
         :param kwargs:
             See :meth:`update_environment`.
         """
-        old_env = self.update_environment(**kwargs)
-        try:
-            yield
-        finally:
-            self.update_environment(**old_env)
+        pass
 
     def transform_kwarg(self, name: str, value: Any, split_single_char_options: bool) -> List[str]:
         if len(name) == 1:
@@ -1708,10 +1616,7 @@ class Git(metaclass=_GitMeta):
         :note:
             Not threadsafe.
         """
-        hexsha, typename, size, stream = self.stream_object_data(ref)
-        data = stream.read(size)
-        del stream
-        return (hexsha, typename, size, data)
+        pass
 
     def stream_object_data(self, ref: str) -> Tuple[str, str, int, "Git.CatFileContentStream"]:
         """Similar to :meth:`get_object_data`, but returns the data as a stream.
@@ -1723,10 +1628,7 @@ class Git(metaclass=_GitMeta):
             This method is not threadsafe. You need one independent :class:`Git`
             instance per thread to be safe!
         """
-        cmd = self._get_persistent_cmd("cat_file_all", "cat_file", batch=True)
-        hexsha, typename, size = self.__get_object_header(cmd, ref)
-        cmd_stdout = cmd.stdout if cmd.stdout is not None else io.BytesIO()
-        return (hexsha, typename, size, self.CatFileContentStream(size, cmd_stdout))
+        pass
 
     def clear_cache(self) -> "Git":
         """Clear all kinds of internal caches to release resources.

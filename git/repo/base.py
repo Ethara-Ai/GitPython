@@ -356,15 +356,11 @@ class Repo:
     @property
     def description(self) -> str:
         """The project's description"""
-        filename = osp.join(self.git_dir, "description")
-        with open(filename, "rb") as fp:
-            return fp.read().rstrip().decode(defenc)
+        pass
 
     @description.setter
     def description(self, descr: str) -> None:
-        filename = osp.join(self.git_dir, "description")
-        with open(filename, "wb") as fp:
-            fp.write((descr + "\n").encode(defenc))
+        pass
 
     @property
     def working_tree_dir(self) -> Optional[PathLike]:
@@ -373,7 +369,7 @@ class Repo:
             The working tree directory of our git repository.
             If this is a bare repository, ``None`` is returned.
         """
-        return self._working_tree_dir
+        pass
 
     @property
     def common_dir(self) -> PathLike:
@@ -382,12 +378,12 @@ class Repo:
             The git dir that holds everything except possibly HEAD, FETCH_HEAD,
             ORIG_HEAD, COMMIT_EDITMSG, index, and logs/.
         """
-        return self._common_dir or self.git_dir
+        pass
 
     @property
     def bare(self) -> bool:
         """:return: ``True`` if the repository is bare"""
-        return self._bare
+        pass
 
     @property
     def heads(self) -> "IterableList[Head]":
@@ -397,7 +393,7 @@ class Repo:
         :return:
             ``git.IterableList(Head, ...)``
         """
-        return Head.list_items(self)
+        pass
 
     @property
     def branches(self) -> "IterableList[Head]":
@@ -408,7 +404,7 @@ class Repo:
         :return:
             ``git.IterableList(Head, ...)``
         """
-        return self.heads
+        pass
 
     @property
     def references(self) -> "IterableList[Reference]":
@@ -418,7 +414,7 @@ class Repo:
         :return:
             ``git.IterableList(Reference, ...)``
         """
-        return Reference.list_items(self)
+        pass
 
     @property
     def refs(self) -> "IterableList[Reference]":
@@ -429,7 +425,7 @@ class Repo:
         :return:
             ``git.IterableList(Reference, ...)``
         """
-        return self.references
+        pass
 
     @property
     def index(self) -> "IndexFile":
@@ -450,7 +446,7 @@ class Repo:
         :return:
             :class:`~git.refs.head.HEAD` object pointing to the current head reference
         """
-        return HEAD(self, "HEAD")
+        pass
 
     @property
     def remotes(self) -> "IterableList[Remote]":
@@ -460,7 +456,7 @@ class Repo:
         :return:
             ``git.IterableList(Remote, ...)``
         """
-        return Remote.list_items(self)
+        pass
 
     def remote(self, name: str = "origin") -> "Remote":
         """:return: The remote with the specified name
@@ -482,7 +478,7 @@ class Repo:
             git.IterableList(Submodule, ...) of direct submodules available from the
             current head
         """
-        return Submodule.list_items(self)
+        pass
 
     def submodule(self, name: str) -> "Submodule":
         """:return: The submodule with the given name
@@ -490,10 +486,7 @@ class Repo:
         :raise ValueError:
             If no such submodule exists.
         """
-        try:
-            return self.submodules[name]
-        except IndexError as e:
-            raise ValueError("Didn't find submodule named %r" % name) from e
+        pass
         # END exception handling
 
     def create_submodule(self, *args: Any, **kwargs: Any) -> Submodule:
@@ -506,7 +499,7 @@ class Repo:
         :return:
             The created submodule.
         """
-        return Submodule.add(self, *args, **kwargs)
+        pass
 
     def iter_submodules(self, *args: Any, **kwargs: Any) -> Iterator[Submodule]:
         """An iterator yielding Submodule instances.
@@ -517,7 +510,7 @@ class Repo:
         :return:
             Iterator
         """
-        return RootModule(self).traverse(*args, **kwargs)
+        pass
 
     def submodule_update(self, *args: Any, **kwargs: Any) -> RootModule:
         """Update the submodules, keeping the repository consistent as it will
@@ -527,7 +520,7 @@ class Repo:
             For more information, please see the documentation of
             :meth:`RootModule.update <git.objects.submodule.root.RootModule.update>`.
         """
-        return RootModule(self).update(*args, **kwargs)
+        pass
 
     # }END submodules
 
@@ -539,7 +532,7 @@ class Repo:
         :return:
             ``git.IterableList(TagReference, ...)``
         """
-        return TagReference.list_items(self)
+        pass
 
     def tag(self, path: PathLike) -> TagReference:
         """
@@ -579,7 +572,7 @@ class Repo:
         :return:
             Newly created :class:`~git.refs.head.Head` Reference.
         """
-        return Head.create(self, path, commit, logmsg, force)
+        pass
 
     def delete_head(self, *heads: "Union[str, Head]", **kwargs: Any) -> None:
         """Delete the given heads.
@@ -587,7 +580,7 @@ class Repo:
         :param kwargs:
             Additional keyword arguments to be passed to :manpage:`git-branch(1)`.
         """
-        return Head.delete(self, *heads, **kwargs)
+        pass
 
     def create_tag(
         self,
@@ -606,11 +599,11 @@ class Repo:
         :return:
             :class:`~git.refs.tag.TagReference` object
         """
-        return TagReference.create(self, path, ref, message, force, **kwargs)
+        pass
 
     def delete_tag(self, *tags: TagReference) -> None:
         """Delete the given tag references."""
-        return TagReference.delete(self, *tags)
+        pass
 
     def create_remote(self, name: str, url: str, **kwargs: Any) -> Remote:
         """Create a new remote.
@@ -724,7 +717,7 @@ class Repo:
         :note:
             Accepts all arguments known to the :meth:`iter_commits` method.
         """
-        return (c.tree for c in self.iter_commits(*args, **kwargs))
+        pass
 
     def tree(self, rev: Union[Tree_ish, str, None] = None) -> "Tree":
         """The :class:`~git.objects.tree.Tree` object for the given tree-ish revision.
@@ -776,10 +769,7 @@ class Repo:
         :return:
             Iterator of :class:`~git.objects.commit.Commit` objects
         """
-        if rev is None:
-            rev = self.head.commit
-
-        return Commit.iter_items(self, rev, paths, **kwargs)
+        pass
 
     def merge_base(self, *rev: TBD, **kwargs: Any) -> List[Commit]:
         R"""Find the closest common ancestor for the given revision
@@ -836,56 +826,25 @@ class Repo:
         :return:
             ``True`` if `ancestor_rev` is an ancestor to `rev`.
         """
-        try:
-            self.git.merge_base(ancestor_rev, rev, is_ancestor=True)
-        except GitCommandError as err:
-            if err.status == 1:
-                return False
-            raise
-        return True
+        pass
 
     def is_valid_object(self, sha: str, object_type: Union[str, None] = None) -> bool:
-        try:
-            complete_sha = self.odb.partial_to_complete_sha_hex(sha)
-            object_info = self.odb.info(complete_sha)
-            if object_type:
-                if object_info.type == object_type.encode():
-                    return True
-                else:
-                    _logger.debug(
-                        "Commit hash points to an object of type '%s'. Requested were objects of type '%s'",
-                        object_info.type.decode(),
-                        object_type,
-                    )
-                    return False
-            else:
-                return True
-        except BadObject:
-            _logger.debug("Commit hash is invalid.")
-            return False
+        pass
 
     def _get_daemon_export(self) -> bool:
-        if self.git_dir:
-            filename = osp.join(self.git_dir, self.DAEMON_EXPORT_FILE)
-        return osp.exists(filename)
+        pass
 
     def _set_daemon_export(self, value: object) -> None:
-        if self.git_dir:
-            filename = osp.join(self.git_dir, self.DAEMON_EXPORT_FILE)
-        fileexists = osp.exists(filename)
-        if value and not fileexists:
-            touch(filename)
-        elif not value and fileexists:
-            os.unlink(filename)
+        pass
 
     @property
     def daemon_export(self) -> bool:
         """If True, git-daemon may export this repository"""
-        return self._get_daemon_export()
+        pass
 
     @daemon_export.setter
     def daemon_export(self, value: object) -> None:
-        self._set_daemon_export(value)
+        pass
 
     def _get_alternates(self) -> List[str]:
         """The list of alternates for this repo from which objects can be retrieved.
@@ -893,14 +852,7 @@ class Repo:
         :return:
             List of strings being pathnames of alternates
         """
-        if self.git_dir:
-            alternates_path = osp.join(self.git_dir, "objects", "info", "alternates")
-
-        if osp.exists(alternates_path):
-            with open(alternates_path, "rb") as f:
-                alts = f.read().decode(defenc)
-            return alts.strip().splitlines()
-        return []
+        pass
 
     def _set_alternates(self, alts: List[str]) -> None:
         """Set the alternates.
@@ -915,22 +867,16 @@ class Repo:
             The method does not check for the existence of the paths in `alts`, as the
             caller is responsible.
         """
-        alternates_path = osp.join(self.common_dir, "objects", "info", "alternates")
-        if not alts:
-            if osp.isfile(alternates_path):
-                os.remove(alternates_path)
-        else:
-            with open(alternates_path, "wb") as f:
-                f.write("\n".join(alts).encode(defenc))
+        pass
 
     @property
     def alternates(self) -> List[str]:
         """Retrieve a list of alternates paths or set a list paths to be used as alternates"""
-        return self._get_alternates()
+        pass
 
     @alternates.setter
     def alternates(self, alts: List[str]) -> None:
-        self._set_alternates(alts)
+        pass
 
     def is_dirty(
         self,
@@ -989,7 +935,7 @@ class Repo:
             This property is expensive, as no cache is involved. To process the result,
             please consider caching it yourself.
         """
-        return self._get_untracked_files()
+        pass
 
     def _get_untracked_files(self, *args: Any, **kwargs: Any) -> List[str]:
         # Make sure we get all files, not only untracked directories.
@@ -1022,18 +968,7 @@ class Repo:
         :return:
             Subset of those paths which are ignored
         """
-        try:
-            proc: str = self.git.check_ignore(*paths)
-        except GitCommandError as err:
-            if err.status == 1:
-                # If return code is 1, this means none of the items in *paths are
-                # ignored by Git, so return an empty list.
-                return []
-            else:
-                # Raise the exception on all other return codes.
-                raise
-
-        return proc.replace("\\\\", "\\").replace('"', "").split("\n")
+        pass
 
     @property
     def active_branch(self) -> Head:
@@ -1049,12 +984,7 @@ class Repo:
         :return:
             :class:`~git.refs.head.Head` to the active branch
         """
-        active_branch = self.head.reference
-        if active_branch.name == ".invalid":
-            raise ValueError(
-                "HEAD points to 'refs/heads/.invalid', which Git uses to mark refs as incompatible with older clients"
-            )
-        return active_branch
+        pass
 
     def blame_incremental(self, rev: str | HEAD | None, file: str, **kwargs: Any) -> Iterator["BlameEntry"]:
         """Iterator for blame information for the given file at the given revision.
@@ -1075,78 +1005,7 @@ class Repo:
         If you combine all line number ranges outputted by this command, you should get
         a continuous range spanning all line numbers in the file.
         """
-
-        data: bytes = self.git.blame(rev, "--", file, p=True, incremental=True, stdout_as_string=False, **kwargs)
-        commits: Dict[bytes, Commit] = {}
-
-        stream = (line for line in data.split(b"\n") if line)
-        while True:
-            try:
-                # When exhausted, causes a StopIteration, terminating this function.
-                line = next(stream)
-            except StopIteration:
-                return
-            split_line = line.split()
-            hexsha, orig_lineno_b, lineno_b, num_lines_b = split_line
-            lineno = int(lineno_b)
-            num_lines = int(num_lines_b)
-            orig_lineno = int(orig_lineno_b)
-            if hexsha not in commits:
-                # Now read the next few lines and build up a dict of properties for this
-                # commit.
-                props: Dict[bytes, bytes] = {}
-                while True:
-                    try:
-                        line = next(stream)
-                    except StopIteration:
-                        return
-                    if line == b"boundary":
-                        # "boundary" indicates a root commit and occurs instead of the
-                        # "previous" tag.
-                        continue
-
-                    tag, value = line.split(b" ", 1)
-                    props[tag] = value
-                    if tag == b"filename":
-                        # "filename" formally terminates the entry for --incremental.
-                        orig_filename = value
-                        break
-
-                c = Commit(
-                    self,
-                    hex_to_bin(hexsha),
-                    author=Actor(
-                        safe_decode(props[b"author"]),
-                        safe_decode(props[b"author-mail"].lstrip(b"<").rstrip(b">")),
-                    ),
-                    authored_date=int(props[b"author-time"]),
-                    committer=Actor(
-                        safe_decode(props[b"committer"]),
-                        safe_decode(props[b"committer-mail"].lstrip(b"<").rstrip(b">")),
-                    ),
-                    committed_date=int(props[b"committer-time"]),
-                )
-                commits[hexsha] = c
-            else:
-                # Discard all lines until we find "filename" which is guaranteed to be
-                # the last line.
-                while True:
-                    try:
-                        # Will fail if we reach the EOF unexpectedly.
-                        line = next(stream)
-                    except StopIteration:
-                        return
-                    tag, value = line.split(b" ", 1)
-                    if tag == b"filename":
-                        orig_filename = value
-                        break
-
-            yield BlameEntry(
-                commits[hexsha],
-                range(lineno, lineno + num_lines),
-                safe_decode(orig_filename),
-                range(orig_lineno, orig_lineno + num_lines),
-            )
+        pass
 
     def blame(
         self,
@@ -1171,135 +1030,7 @@ class Repo:
             :class:`~git.objects.commit.Commit` objects will be given in order of
             appearance.
         """
-        if incremental:
-            return self.blame_incremental(rev, file, **kwargs)
-        rev_opts = rev_opts or []
-        data: bytes = self.git.blame(rev, *rev_opts, "--", file, p=True, stdout_as_string=False, **kwargs)
-        commits: Dict[str, Commit] = {}
-        blames: List[List[Commit | List[str | bytes] | None]] = []
-
-        class InfoTD(TypedDict, total=False):
-            sha: str
-            id: str
-            filename: str
-            summary: str
-            author: str
-            author_email: str
-            author_date: int
-            committer: str
-            committer_email: str
-            committer_date: int
-
-        info: InfoTD = {}
-
-        keepends = True
-        for line_bytes in data.splitlines(keepends):
-            try:
-                line_str = line_bytes.rstrip().decode(defenc)
-            except UnicodeDecodeError:
-                firstpart = ""
-                parts = []
-                is_binary = True
-            else:
-                # As we don't have an idea when the binary data ends, as it could
-                # contain multiple newlines in the process. So we rely on being able to
-                # decode to tell us what it is. This can absolutely fail even on text
-                # files, but even if it does, we should be fine treating it as binary
-                # instead.
-                parts = self.re_whitespace.split(line_str, 1)
-                firstpart = parts[0]
-                is_binary = False
-            # END handle decode of line
-
-            if self.re_hexsha_only.search(firstpart):
-                # handles
-                # 634396b2f541a9f2d58b00be1a07f0c358b999b3 1 1 7        - indicates blame-data start
-                # 634396b2f541a9f2d58b00be1a07f0c358b999b3 2 2          - indicates
-                # another line of blame with the same data
-                digits = parts[-1].split(" ")
-                if len(digits) == 3:
-                    info = {"id": firstpart}
-                    blames.append([None, []])
-                elif info["id"] != firstpart:
-                    info = {"id": firstpart}
-                    blames.append([commits.get(firstpart), []])
-                # END blame data initialization
-            else:
-                m = self.re_author_committer_start.search(firstpart)
-                if m:
-                    # handles:
-                    # author Tom Preston-Werner
-                    # author-mail <tom@mojombo.com>
-                    # author-time 1192271832
-                    # author-tz -0700
-                    # committer Tom Preston-Werner
-                    # committer-mail <tom@mojombo.com>
-                    # committer-time 1192271832
-                    # committer-tz -0700  - IGNORED BY US
-                    role = m.group(0)
-                    if role == "author":
-                        if firstpart.endswith("-mail"):
-                            info["author_email"] = parts[-1]
-                        elif firstpart.endswith("-time"):
-                            info["author_date"] = int(parts[-1])
-                        elif role == firstpart:
-                            info["author"] = parts[-1]
-                    elif role == "committer":
-                        if firstpart.endswith("-mail"):
-                            info["committer_email"] = parts[-1]
-                        elif firstpart.endswith("-time"):
-                            info["committer_date"] = int(parts[-1])
-                        elif role == firstpart:
-                            info["committer"] = parts[-1]
-                    # END distinguish mail,time,name
-                else:
-                    # handle
-                    # filename lib/grit.rb
-                    # summary add Blob
-                    # <and rest>
-                    if firstpart.startswith("filename"):
-                        info["filename"] = parts[-1]
-                    elif firstpart.startswith("summary"):
-                        info["summary"] = parts[-1]
-                    elif firstpart == "":
-                        if info:
-                            sha = info["id"]
-                            c = commits.get(sha)
-                            if c is None:
-                                c = Commit(
-                                    self,
-                                    hex_to_bin(sha),
-                                    author=Actor._from_string(f"{info['author']} {info['author_email']}"),
-                                    authored_date=info["author_date"],
-                                    committer=Actor._from_string(f"{info['committer']} {info['committer_email']}"),
-                                    committed_date=info["committer_date"],
-                                )
-                                commits[sha] = c
-                            blames[-1][0] = c
-                            # END if commit objects needs initial creation
-
-                            if blames[-1][1] is not None:
-                                line: str | bytes
-                                if not is_binary:
-                                    if line_str and line_str[0] == "\t":
-                                        line_str = line_str[1:]
-                                    line = line_str
-                                else:
-                                    line = line_bytes
-                                    # NOTE: We are actually parsing lines out of binary
-                                    # data, which can lead to the binary being split up
-                                    # along the newline separator. We will append this
-                                    # to the blame we are currently looking at, even
-                                    # though it should be concatenated with the last
-                                    # line we have seen.
-                                blames[-1][1].append(line)
-
-                            info = {"id": sha}
-                        # END if we collected commit info
-                    # END distinguish filename,summary,rest
-                # END distinguish author|committer vs filename,summary,rest
-            # END distinguish hexsha vs other information
-        return blames
+        pass
 
     @classmethod
     def init(
@@ -1588,18 +1319,7 @@ class Repo:
         :return:
             self
         """
-        if treeish is None:
-            treeish = self.head.commit
-        if prefix and "prefix" not in kwargs:
-            kwargs["prefix"] = prefix
-        kwargs["output_stream"] = ostream
-        path = kwargs.pop("path", [])
-        path = cast(Union[PathLike, List[PathLike], Tuple[PathLike, ...]], path)
-        if not isinstance(path, (tuple, list)):
-            path = [path]
-        # END ensure paths is list (or tuple)
-        self.git.archive("--", treeish, *path, **kwargs)
-        return self
+        pass
 
     def has_separate_working_tree(self) -> bool:
         """
@@ -1632,10 +1352,4 @@ class Repo:
 
             ``None`` if we are not currently rebasing.
         """
-        if self.git_dir:
-            rebase_head_file = osp.join(self.git_dir, "REBASE_HEAD")
-        if not osp.isfile(rebase_head_file):
-            return None
-        with open(rebase_head_file, "rt") as f:
-            content = f.readline().strip()
-        return self.commit(content)
+        pass

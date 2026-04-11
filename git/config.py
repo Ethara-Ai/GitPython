@@ -107,14 +107,7 @@ class MetaParserBuilder(abc.ABCMeta):  # noqa: B024
 def needs_values(func: Callable[..., _T]) -> Callable[..., _T]:
     """Return a method for ensuring we read values (on demand) before we try to access
     them."""
-
-    @wraps(func)
-    def assure_data_present(self: "GitConfigParser", *args: Any, **kwargs: Any) -> _T:
-        self.read()
-        return func(self, *args, **kwargs)
-
-    # END wrapper method
-    return assure_data_present
+    pass
 
 
 def set_dirty_and_flush_changes(non_const_func: Callable[..., _T]) -> Callable[..., _T]:
@@ -123,16 +116,7 @@ def set_dirty_and_flush_changes(non_const_func: Callable[..., _T]) -> Callable[.
     If so, the instance will be set dirty. Additionally, we flush the changes right to
     disk.
     """
-
-    def flush_changes(self: "GitConfigParser", *args: Any, **kwargs: Any) -> _T:
-        rval = non_const_func(self, *args, **kwargs)
-        self._dirty = True
-        self.write()
-        return rval
-
-    # END wrapper method
-    flush_changes.__name__ = non_const_func.__name__
-    return flush_changes
+    pass
 
 
 class SectionConstraint(Generic[T_ConfigParser]):
@@ -179,7 +163,7 @@ class SectionConstraint(Generic[T_ConfigParser]):
     def _call_config(self, method: str, *args: Any, **kwargs: Any) -> Any:
         """Call the configuration at the given method which must take a section name as
         first argument."""
-        return getattr(self._config, method)(self._section_name, *args, **kwargs)
+        pass
 
     @property
     def config(self) -> T_ConfigParser:
@@ -247,25 +231,7 @@ class _OMD(OrderedDict_OMD):
 def get_config_path(config_level: Lit_config_levels) -> str:
     # We do not support an absolute path of the gitconfig on Windows.
     # Use the global config instead.
-    if sys.platform == "win32" and config_level == "system":
-        config_level = "global"
-
-    if config_level == "system":
-        return "/etc/gitconfig"
-    elif config_level == "user":
-        config_home = os.environ.get("XDG_CONFIG_HOME") or osp.join(os.environ.get("HOME", "~"), ".config")
-        return osp.normpath(osp.expanduser(osp.join(config_home, "git", "config")))
-    elif config_level == "global":
-        return osp.normpath(osp.expanduser("~/.gitconfig"))
-    elif config_level == "repository":
-        raise ValueError("No repo to get repository configuration from. Use Repo._get_config_path")
-    else:
-        # Should not reach here. Will raise ValueError if does. Static typing will warn
-        # about missing elifs.
-        assert_never(  # type: ignore[unreachable]
-            config_level,
-            ValueError(f"Invalid configuration level: {config_level!r}"),
-        )
+    pass
 
 
 class GitConfigParser(cp.RawConfigParser, metaclass=MetaParserBuilder):
@@ -376,23 +342,7 @@ class GitConfigParser(cp.RawConfigParser, metaclass=MetaParserBuilder):
         self._acquire_lock()
 
     def _acquire_lock(self) -> None:
-        if not self._read_only:
-            if not self._lock:
-                if isinstance(self._file_or_files, (str, os.PathLike)):
-                    file_or_files = self._file_or_files
-                elif isinstance(self._file_or_files, (tuple, list, Sequence)):
-                    raise ValueError(
-                        "Write-ConfigParsers can operate on a single file only, multiple files have been passed"
-                    )
-                else:
-                    file_or_files = self._file_or_files.name
-
-                # END get filename from handle/stream
-                # Initialize lock base - we want to write.
-                self._lock = self.t_lock(file_or_files)
-            # END lock check
-
-            self._lock._obtain_lock()
+        pass
         # END read-only check
 
     def __del__(self) -> None:
@@ -783,7 +733,7 @@ class GitConfigParser(cp.RawConfigParser, metaclass=MetaParserBuilder):
     @property
     def read_only(self) -> bool:
         """:return: ``True`` if this instance may change the configuration file"""
-        return self._read_only
+        pass
 
     # FIXME: Figure out if default or return type can really include bool.
     def get_value(
@@ -839,15 +789,7 @@ class GitConfigParser(cp.RawConfigParser, metaclass=MetaParserBuilder):
             In case the value could not be understood.
             Otherwise the exceptions known to the ConfigParser will be raised.
         """
-        try:
-            self.sections()
-            lst = self._sections[section].getall(option)
-        except Exception:
-            if default is not None:
-                return [default]
-            raise
-
-        return [self._string_to_value(valuestr) for valuestr in lst]
+        pass
 
     def _string_to_value(self, valuestr: str) -> Union[int, float, str, bool]:
         types = (int, float)
@@ -929,10 +871,7 @@ class GitConfigParser(cp.RawConfigParser, metaclass=MetaParserBuilder):
         :return:
             This instance
         """
-        if not self.has_section(section):
-            self.add_section(section)
-        self._sections[section].add(option, self._value_to_string(value))
-        return self
+        pass
 
     def rename_section(self, section: str, new_name: str) -> "GitConfigParser":
         """Rename the given section to `new_name`.

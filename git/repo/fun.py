@@ -49,9 +49,7 @@ if TYPE_CHECKING:
 
 
 def touch(filename: str) -> str:
-    with open(filename, "ab"):
-        pass
-    return filename
+    pass
 
 
 def is_git_dir(d: PathLike) -> bool:
@@ -62,65 +60,17 @@ def is_git_dir(d: PathLike) -> bool:
         clearly indicates that we don't support it. There is the unlikely danger to
         throw if we see directories which just look like a worktree dir, but are none.
     """
-    if osp.isdir(d):
-        if (osp.isdir(osp.join(d, "objects")) or "GIT_OBJECT_DIRECTORY" in os.environ) and osp.isdir(
-            osp.join(d, "refs")
-        ):
-            headref = osp.join(d, "HEAD")
-            return osp.isfile(headref) or (osp.islink(headref) and os.readlink(headref).startswith("refs"))
-        elif (
-            osp.isfile(osp.join(d, "gitdir"))
-            and osp.isfile(osp.join(d, "commondir"))
-            and osp.isfile(osp.join(d, "gitfile"))
-        ):
-            raise WorkTreeRepositoryUnsupported(d)
-    return False
+    pass
 
 
 def find_worktree_git_dir(dotgit: PathLike) -> Optional[str]:
     """Search for a gitdir for this worktree."""
-    try:
-        statbuf = os.stat(dotgit)
-    except OSError:
-        return None
-    if not stat.S_ISREG(statbuf.st_mode):
-        return None
-
-    try:
-        lines = Path(dotgit).read_text().splitlines()
-        for key, value in [line.strip().split(": ") for line in lines]:
-            if key == "gitdir":
-                return value
-    except ValueError:
-        pass
-    return None
+    pass
 
 
 def find_submodule_git_dir(d: PathLike) -> Optional[PathLike]:
     """Search for a submodule repo."""
-    if is_git_dir(d):
-        return d
-
-    try:
-        with open(d) as fp:
-            content = fp.read().rstrip()
-    except IOError:
-        # It's probably not a file.
-        pass
-    else:
-        if content.startswith("gitdir: "):
-            path = content[8:]
-
-            if Git.is_cygwin():
-                # Cygwin creates submodules prefixed with `/cygdrive/...`.
-                # Cygwin git understands Cygwin paths much better than Windows ones.
-                # Also the Cygwin tests are assuming Cygwin paths.
-                path = cygpath(path)
-            if not osp.isabs(path):
-                path = osp.normpath(osp.join(osp.dirname(d), path))
-            return find_submodule_git_dir(path)
-    # END handle exception
-    return None
+    pass
 
 
 def short_to_long(odb: "GitCmdObjectDB", hexsha: str) -> Optional[bytes]:

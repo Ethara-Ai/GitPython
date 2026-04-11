@@ -239,29 +239,21 @@ class Commit(base.Object, TraversableIterableObj, Diffable, Serializable):
         return new_commit
 
     def _set_cache_(self, attr: str) -> None:
-        if attr in Commit.__slots__:
-            # Read the data in a chunk, its faster - then provide a file wrapper.
-            _binsha, _typename, self.size, stream = self.repo.odb.stream(self.binsha)
-            self._deserialize(BytesIO(stream.read()))
-        else:
-            super()._set_cache_(attr)
+        pass
         # END handle attrs
 
     @property
     def authored_datetime(self) -> datetime.datetime:
-        return from_timestamp(self.authored_date, self.author_tz_offset)
+        pass
 
     @property
     def committed_datetime(self) -> datetime.datetime:
-        return from_timestamp(self.committed_date, self.committer_tz_offset)
+        pass
 
     @property
     def summary(self) -> Union[str, bytes]:
         """:return: First line of the commit message"""
-        if isinstance(self.message, str):
-            return self.message.split("\n", 1)[0]
-        else:
-            return self.message.split(b"\n", 1)[0]
+        pass
 
     def count(self, paths: Union[PathLike, Sequence[PathLike]] = "", **kwargs: Any) -> int:
         """Count the number of commits reachable from this commit.
@@ -294,7 +286,7 @@ class Commit(base.Object, TraversableIterableObj, Diffable, Serializable):
         :note:
             Mostly useful for UI purposes.
         """
-        return self.repo.git.name_rev(self)
+        pass
 
     @classmethod
     def iter_items(
@@ -361,13 +353,7 @@ class Commit(base.Object, TraversableIterableObj, Diffable, Serializable):
         :return:
             Iterator yielding :class:`Commit` objects which are parents of ``self``
         """
-        # skip ourselves
-        skip = kwargs.get("skip", 1)
-        if skip == 0:  # skip ourselves
-            skip = 1
-        kwargs["skip"] = skip
-
-        return self.iter_items(self.repo, self, paths, **kwargs)
+        pass
 
     @property
     def stats(self) -> Stats:
@@ -377,26 +363,7 @@ class Commit(base.Object, TraversableIterableObj, Diffable, Serializable):
         :return:
             :class:`Stats`
         """
-
-        def process_lines(lines: List[str]) -> str:
-            text = ""
-            for file_info, line in zip(lines, lines[len(lines) // 2 :]):
-                change_type = file_info.split("\t")[0][-1]
-                (insertions, deletions, filename) = line.split("\t")
-                text += "%s\t%s\t%s\t%s\n" % (change_type, insertions, deletions, filename)
-            return text
-
-        if not self.parents:
-            lines = self.repo.git.diff_tree(
-                self.hexsha, "--", numstat=True, no_renames=True, root=True, raw=True
-            ).splitlines()[1:]
-            text = process_lines(lines)
-        else:
-            lines = self.repo.git.diff(
-                self.parents[0].hexsha, self.hexsha, "--", numstat=True, no_renames=True, raw=True
-            ).splitlines()
-            text = process_lines(lines)
-        return Stats._list_from_string(self.repo, text)
+        pass
 
     @property
     def trailers(self) -> Dict[str, str]:
@@ -410,12 +377,7 @@ class Commit(base.Object, TraversableIterableObj, Diffable, Serializable):
             Dictionary containing whitespace stripped trailer information.
             Only contains the latest instance of each trailer key.
         """
-        warnings.warn(
-            "Commit.trailers is deprecated, use Commit.trailers_list or Commit.trailers_dict instead",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return {k: v[0] for k, v in self.trailers_dict.items()}
+        pass
 
     @property
     def trailers_list(self) -> List[Tuple[str, str]]:
@@ -450,24 +412,7 @@ class Commit(base.Object, TraversableIterableObj, Diffable, Serializable):
         :return:
             List containing key-value tuples of whitespace stripped trailer information.
         """
-        cmd = ["git", "interpret-trailers", "--parse"]
-        proc: Git.AutoInterrupt = self.repo.git.execute(  # type: ignore[call-overload]
-            cmd,
-            as_process=True,
-            istream=PIPE,
-        )
-        trailer: str = proc.communicate(str(self.message).encode())[0].decode("utf8")
-        trailer = trailer.strip()
-
-        if not trailer:
-            return []
-
-        trailer_list = []
-        for t in trailer.split("\n"):
-            key, val = t.split(":", 1)
-            trailer_list.append((key.strip(), val.strip()))
-
-        return trailer_list
+        pass
 
     @property
     def trailers_dict(self) -> Dict[str, List[str]]:
@@ -504,10 +449,7 @@ class Commit(base.Object, TraversableIterableObj, Diffable, Serializable):
             Dictionary containing whitespace stripped trailer information, mapping
             trailer keys to a list of their corresponding values.
         """
-        d = defaultdict(list)
-        for key, val in self.trailers_list:
-            d[key].append(val)
-        return dict(d)
+        pass
 
     @classmethod
     def _iter_from_process_or_stream(cls, repo: "Repo", proc_or_stream: Union[Popen, IO]) -> Iterator["Commit"]:
@@ -780,108 +722,7 @@ class Commit(base.Object, TraversableIterableObj, Diffable, Serializable):
         return self
 
     def _deserialize(self, stream: BytesIO) -> "Commit":
-        readline = stream.readline
-        self.tree = Tree(self.repo, hex_to_bin(readline().split()[1]), Tree.tree_id << 12, "")
-
-        self.parents = []
-        next_line = None
-        while True:
-            parent_line = readline()
-            if not parent_line.startswith(b"parent"):
-                next_line = parent_line
-                break
-            # END abort reading parents
-            self.parents.append(type(self)(self.repo, hex_to_bin(parent_line.split()[-1].decode("ascii"))))
-        # END for each parent line
-        self.parents = tuple(self.parents)
-
-        # We don't know actual author encoding before we have parsed it, so keep the
-        # lines around.
-        author_line = next_line
-        committer_line = readline()
-
-        # We might run into one or more mergetag blocks, skip those for now.
-        next_line = readline()
-        while next_line.startswith(b"mergetag "):
-            next_line = readline()
-            while next_line.startswith(b" "):
-                next_line = readline()
-        # END skip mergetags
-
-        # Now we can have the encoding line, or an empty line followed by the optional
-        # message.
-        self.encoding = self.default_encoding
-        self.gpgsig = ""
-
-        # Read headers.
-        enc = next_line
-        buf = enc.strip()
-        while buf:
-            if buf[0:10] == b"encoding ":
-                self.encoding = buf[buf.find(b" ") + 1 :].decode(self.encoding, "ignore")
-            elif buf[0:7] == b"gpgsig ":
-                sig = buf[buf.find(b" ") + 1 :] + b"\n"
-                is_next_header = False
-                while True:
-                    sigbuf = readline()
-                    if not sigbuf:
-                        break
-                    if sigbuf[0:1] != b" ":
-                        buf = sigbuf.strip()
-                        is_next_header = True
-                        break
-                    sig += sigbuf[1:]
-                # END read all signature
-                self.gpgsig = sig.rstrip(b"\n").decode(self.encoding, "ignore")
-                if is_next_header:
-                    continue
-            buf = readline().strip()
-
-        # Decode the author's name.
-        try:
-            (
-                self.author,
-                self.authored_date,
-                self.author_tz_offset,
-            ) = parse_actor_and_date(author_line.decode(self.encoding, "replace"))
-        except UnicodeDecodeError:
-            _logger.error(
-                "Failed to decode author line '%s' using encoding %s",
-                author_line,
-                self.encoding,
-                exc_info=True,
-            )
-
-        try:
-            (
-                self.committer,
-                self.committed_date,
-                self.committer_tz_offset,
-            ) = parse_actor_and_date(committer_line.decode(self.encoding, "replace"))
-        except UnicodeDecodeError:
-            _logger.error(
-                "Failed to decode committer line '%s' using encoding %s",
-                committer_line,
-                self.encoding,
-                exc_info=True,
-            )
-        # END handle author's encoding
-
-        # A stream from our data simply gives us the plain message.
-        # The end of our message stream is marked with a newline that we strip.
-        self.message = stream.read()
-        try:
-            self.message = self.message.decode(self.encoding, "replace")
-        except UnicodeDecodeError:
-            _logger.error(
-                "Failed to decode message '%s' using encoding %s",
-                self.message,
-                self.encoding,
-                exc_info=True,
-            )
-        # END exception handling
-
-        return self
+        pass
 
     # } END serializable implementation
 
@@ -895,15 +736,4 @@ class Commit(base.Object, TraversableIterableObj, Diffable, Serializable):
         :return:
             List of co-authors for this commit (as :class:`~git.util.Actor` objects).
         """
-        co_authors = []
-
-        if self.message:
-            results = re.findall(
-                r"^Co-authored-by: (.*) <(.*?)>$",
-                str(self.message),
-                re.MULTILINE,
-            )
-            for author in results:
-                co_authors.append(Actor(*author))
-
-        return co_authors
+        pass

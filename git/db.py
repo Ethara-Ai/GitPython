@@ -43,8 +43,7 @@ class GitCmdObjectDB(LooseObjectDB):
 
     def stream(self, binsha: bytes) -> OStream:
         """Get git object data as a stream supporting ``read()`` (using git itself)."""
-        hexsha, typename, size, stream = self._git.stream_object_data(bin_to_hex(binsha))
-        return OStream(hex_to_bin(hexsha), typename, size, stream)
+        pass
 
     # { Interface
 

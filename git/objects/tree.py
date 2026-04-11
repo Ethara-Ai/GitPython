@@ -53,7 +53,7 @@ TraversedTreeTup = Union[Tuple[Union["Tree", None], IndexObjUnion, Tuple["Submod
 
 
 def cmp(a: str, b: str) -> int:
-    return (a > b) - (a < b)
+    pass
 
 
 class TreeModifier:
@@ -89,8 +89,7 @@ class TreeModifier:
         :return:
             self
         """
-        self._cache.sort(key=lambda x: (x[2] + "/") if x[1] == Tree.tree_id << 12 else x[2])
-        return self
+        pass
 
     # } END interface
 
@@ -148,10 +147,7 @@ class TreeModifier:
         :param binsha:
             20 byte binary sha.
         """
-        assert isinstance(binsha, bytes) and isinstance(mode, int) and isinstance(name, str)
-        tree_cache = (binsha, mode, name)
-
-        self._cache.append(tree_cache)
+        pass
 
     def __delitem__(self, name: str) -> None:
         """Delete an item with the given name if it exists."""
@@ -211,12 +207,7 @@ class Tree(IndexObject, git_diff.Diffable, util.Traversable, util.Serializable):
         return ()
 
     def _set_cache_(self, attr: str) -> None:
-        if attr == "_cache":
-            # Set the data when we need it.
-            ostream = self.repo.odb.stream(self.binsha)
-            self._cache: List[TreeCacheTup] = tree_entries_from_data(ostream.read())
-        else:
-            super()._set_cache_(attr)
+        pass
         # END handle attribute
 
     def _iter_convert_to_object(self, iterable: Iterable[TreeCacheTup]) -> Iterator[IndexObjUnion]:
@@ -281,12 +272,12 @@ class Tree(IndexObject, git_diff.Diffable, util.Traversable, util.Serializable):
     @property
     def trees(self) -> List["Tree"]:
         """:return: list(Tree, ...) List of trees directly below this tree"""
-        return [i for i in self if i.type == "tree"]
+        pass
 
     @property
     def blobs(self) -> List[Blob]:
         """:return: list(Blob, ...) List of blobs directly below this tree"""
-        return [i for i in self if i.type == "blob"]
+        pass
 
     @property
     def cache(self) -> TreeModifier:
@@ -300,7 +291,7 @@ class Tree(IndexObject, git_diff.Diffable, util.Traversable, util.Serializable):
         :note:
             See :class:`TreeModifier` for more information on how to alter the cache.
         """
-        return TreeModifier(self._cache)
+        pass
 
     def traverse(
         self,
@@ -349,7 +340,7 @@ class Tree(IndexObject, git_diff.Diffable, util.Traversable, util.Serializable):
 
             Tree -> IterableList[Union[Submodule, Tree, Blob]]
         """
-        return super()._list_traverse(*args, **kwargs)
+        pass
 
     # List protocol
 
@@ -408,8 +399,7 @@ class Tree(IndexObject, git_diff.Diffable, util.Traversable, util.Serializable):
         return self
 
     def _deserialize(self, stream: "BytesIO") -> "Tree":
-        self._cache = tree_entries_from_data(stream.read())
-        return self
+        pass
 
 
 # END tree

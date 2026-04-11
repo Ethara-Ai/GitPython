@@ -52,32 +52,22 @@ class RefLogEntry(Tuple[str, str, Actor, Tuple[int, int], str]):
 
     def format(self) -> str:
         """:return: A string suitable to be placed in a reflog file."""
-        act = self.actor
-        time = self.time
-        return "{} {} {} <{}> {!s} {}\t{}\n".format(
-            self.oldhexsha,
-            self.newhexsha,
-            act.name,
-            act.email,
-            time[0],
-            altz_to_utctz_str(time[1]),
-            self.message,
-        )
+        pass
 
     @property
     def oldhexsha(self) -> str:
         """The hexsha to the commit the ref pointed to before the change."""
-        return self[0]
+        pass
 
     @property
     def newhexsha(self) -> str:
         """The hexsha to the commit the ref now points to, after the change."""
-        return self[1]
+        pass
 
     @property
     def actor(self) -> Actor:
         """Actor instance, providing access."""
-        return self[2]
+        pass
 
     @property
     def time(self) -> Tuple[int, int]:
@@ -91,7 +81,7 @@ class RefLogEntry(Tuple[str, str, Actor, Tuple[int, int], str]):
     @property
     def message(self) -> str:
         """Message describing the operation that acted on the reference."""
-        return self[4]
+        pass
 
     @classmethod
     def new(
@@ -104,10 +94,7 @@ class RefLogEntry(Tuple[str, str, Actor, Tuple[int, int], str]):
         message: str,
     ) -> "RefLogEntry":  # skipcq: PYL-W0621
         """:return: New instance of a :class:`RefLogEntry`"""
-        if not isinstance(actor, Actor):
-            raise ValueError("Need actor instance, got %s" % actor)
-        # END check types
-        return RefLogEntry((oldhexsha, newhexsha, actor, (time, tz_offset), message))
+        pass
 
     @classmethod
     def from_line(cls, line: bytes) -> "RefLogEntry":
@@ -173,17 +160,7 @@ class RefLog(List[RefLogEntry], Serializable):
         # END handle filepath
 
     def _read_from_file(self) -> None:
-        try:
-            fmap = file_contents_ro_filepath(self._path, stream=True, allow_mmap=True)
-        except OSError:
-            # It is possible and allowed that the file doesn't exist!
-            return
-        # END handle invalid log
-
-        try:
-            self._deserialize(fmap)
-        finally:
-            fmap.close()
+        pass
         # END handle closing of handle
 
     # { Interface
@@ -201,7 +178,7 @@ class RefLog(List[RefLogEntry], Serializable):
         :raise ValueError:
             If the file could not be read or was corrupted in some way.
         """
-        return cls(filepath)
+        pass
 
     @classmethod
     def path(cls, ref: "SymbolicReference") -> str:
@@ -226,19 +203,7 @@ class RefLog(List[RefLogEntry], Serializable):
             File-like object containing the revlog in its native format or string
             instance pointing to a file to read.
         """
-        new_entry = RefLogEntry.from_line
-        if isinstance(stream, str):
-            # Default args return mmap since Python 3.
-            _stream = file_contents_ro_filepath(stream)
-            assert isinstance(_stream, mmap)
-        else:
-            _stream = stream
-        # END handle stream type
-        while True:
-            line = _stream.readline()
-            if not line:
-                return
-            yield new_entry(line.strip())
+        pass
         # END endless loop
 
     @classmethod
@@ -393,7 +358,6 @@ class RefLog(List[RefLogEntry], Serializable):
         return self
 
     def _deserialize(self, stream: "BytesIO") -> "RefLog":
-        self.extend(self.iter_entries(stream))
-        return self
+        pass
 
     # } END serializable interface

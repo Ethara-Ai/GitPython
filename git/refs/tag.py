@@ -82,7 +82,7 @@ class TagReference(Reference):
     # Make object read-only. It should be reasonably hard to adjust an existing tag.
     @property  # type: ignore[misc]
     def object(self) -> AnyGitObject:
-        return Reference._get_object(self)
+        pass
 
     @classmethod
     def create(
@@ -148,7 +148,7 @@ class TagReference(Reference):
     @classmethod
     def delete(cls, repo: "Repo", *tags: "TagReference") -> None:  # type: ignore[override]
         """Delete the given existing tag or tags."""
-        repo.git.tag("-d", *tags)
+        pass
 
 
 # Provide an alias.

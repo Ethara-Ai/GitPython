@@ -109,32 +109,4 @@ class TagObject(base.Object):
 
     def _set_cache_(self, attr: str) -> None:
         """Cache all our attributes at once."""
-        if attr in TagObject.__slots__:
-            ostream = self.repo.odb.stream(self.binsha)
-            lines: List[str] = ostream.read().decode(defenc, "replace").splitlines()
-
-            _obj, hexsha = lines[0].split(" ")
-            _type_token, type_name = lines[1].split(" ")
-            object_type = get_object_type_by_name(type_name.encode("ascii"))
-            self.object = object_type(self.repo, hex_to_bin(hexsha))
-
-            self.tag = lines[2][4:]  # tag <tag name>
-
-            if len(lines) > 3:
-                tagger_info = lines[3]  # tagger <actor> <date>
-                (
-                    self.tagger,
-                    self.tagged_date,
-                    self.tagger_tz_offset,
-                ) = parse_actor_and_date(tagger_info)
-
-            # Line 4 empty - it could mark the beginning of the next header.
-            # In case there really is no message, it would not exist.
-            # Otherwise a newline separates header from message.
-            if len(lines) > 5:
-                self.message = "\n".join(lines[5:])
-            else:
-                self.message = ""
-        # END check our attributes
-        else:
-            super()._set_cache_(attr)
+        pass

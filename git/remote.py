@@ -188,7 +188,7 @@ class PushInfo(IterableObj):
 
     @property
     def old_commit(self) -> Union["Commit", None]:
-        return self._old_commit_sha and self._remote.repo.commit(self._old_commit_sha) or None
+        pass
 
     @property
     def remote_ref(self) -> Union[RemoteReference, TagReference]:
@@ -198,17 +198,7 @@ class PushInfo(IterableObj):
             :class:`~git.refs.tag.TagReference` in the local repository corresponding to
             the :attr:`remote_ref_string` kept in this instance.
         """
-        # Translate heads to a local remote. Tags stay as they are.
-        if self.remote_ref_string.startswith("refs/tags"):
-            return TagReference(self._remote.repo, self.remote_ref_string)
-        elif self.remote_ref_string.startswith("refs/heads"):
-            remote_ref = Reference(self._remote.repo, self.remote_ref_string)
-            return RemoteReference(
-                self._remote.repo,
-                "refs/remotes/%s/%s" % (str(self._remote), remote_ref.name),
-            )
-        else:
-            raise ValueError("Could not handle remote ref: %r" % self.remote_ref_string)
+        pass
         # END
 
     @classmethod
@@ -281,8 +271,7 @@ class PushInfoList(IterableList[PushInfo]):
 
     def raise_if_error(self) -> None:
         """Raise an exception if any ref failed to push."""
-        if self.error:
-            raise self.error
+        pass
 
 
 class FetchInfo(IterableObj):
@@ -369,7 +358,7 @@ class FetchInfo(IterableObj):
     @property
     def name(self) -> str:
         """:return: Name of our remote ref"""
-        return self.ref.name
+        pass
 
     @property
     def commit(self) -> "Commit":
@@ -582,15 +571,7 @@ class Remote(LazyMixin, IterableObj):
         return 'remote "%s"' % self.name
 
     def _set_cache_(self, attr: str) -> None:
-        if attr == "_config_reader":
-            # NOTE: This is cached as __getattr__ is overridden to return remote config
-            # values implicitly, such as in print(r.pushurl).
-            self._config_reader = SectionConstraint(
-                self.repo.config_reader("repository"),
-                self._config_section_name(),
-            )
-        else:
-            super()._set_cache_(attr)
+        pass
 
     def __str__(self) -> str:
         return self.name
@@ -654,15 +635,7 @@ class Remote(LazyMixin, IterableObj):
         :return:
             self
         """
-        if not allow_unsafe_protocols:
-            Git.check_unsafe_protocols(new_url)
-        scmd = "set-url"
-        kwargs["insert_kwargs_after"] = scmd
-        if old_url:
-            self.repo.git.remote(scmd, "--", self.name, new_url, old_url, **kwargs)
-        else:
-            self.repo.git.remote(scmd, "--", self.name, new_url, **kwargs)
-        return self
+        pass
 
     def add_url(self, url: str, allow_unsafe_protocols: bool = False, **kwargs: Any) -> "Remote":
         """Adds a new url on current remote (special case of ``git remote set-url``).
@@ -679,7 +652,7 @@ class Remote(LazyMixin, IterableObj):
         :return:
             self
         """
-        return self.set_url(url, add=True, allow_unsafe_protocols=allow_unsafe_protocols)
+        pass
 
     def delete_url(self, url: str, **kwargs: Any) -> "Remote":
         """Deletes a new url on current remote (special case of ``git remote set-url``).
@@ -693,40 +666,12 @@ class Remote(LazyMixin, IterableObj):
         :return:
             self
         """
-        return self.set_url(url, delete=True)
+        pass
 
     @property
     def urls(self) -> Iterator[str]:
         """:return: Iterator yielding all configured URL targets on a remote as strings"""
-        try:
-            remote_details = self.repo.git.remote("get-url", "--all", self.name)
-            assert isinstance(remote_details, str)
-            for line in remote_details.split("\n"):
-                yield line
-        except GitCommandError as ex:
-            ## We are on git < 2.7 (i.e TravisCI as of Oct-2016),
-            #  so `get-utl` command does not exist yet!
-            #    see: https://github.com/gitpython-developers/GitPython/pull/528#issuecomment-252976319
-            #    and: http://stackoverflow.com/a/32991784/548792
-            #
-            if "Unknown subcommand: get-url" in str(ex):
-                try:
-                    remote_details = self.repo.git.remote("show", self.name)
-                    assert isinstance(remote_details, str)
-                    for line in remote_details.split("\n"):
-                        if "  Push  URL:" in line:
-                            yield line.split(": ")[-1]
-                except GitCommandError as _ex:
-                    if any(msg in str(_ex) for msg in ["correct access rights", "cannot run ssh"]):
-                        # If ssh is not setup to access this repository, see issue 694.
-                        remote_details = self.repo.git.config("--get-all", "remote.%s.url" % self.name)
-                        assert isinstance(remote_details, str)
-                        for line in remote_details.split("\n"):
-                            yield line
-                    else:
-                        raise _ex
-            else:
-                raise ex
+        pass
 
     @property
     def refs(self) -> IterableList[RemoteReference]:
@@ -739,9 +684,7 @@ class Remote(LazyMixin, IterableObj):
 
                 remote.refs.master  # yields RemoteReference('/refs/remotes/origin/master')
         """
-        out_refs: IterableList[RemoteReference] = IterableList(RemoteReference._id_attribute_, "%s/" % self.name)
-        out_refs.extend(RemoteReference.list_items(self.repo, remote=self.name))
-        return out_refs
+        pass
 
     @property
     def stale_refs(self) -> IterableList[Reference]:
@@ -760,23 +703,7 @@ class Remote(LazyMixin, IterableObj):
             as well. This is a fix for the issue described here:
             https://github.com/gitpython-developers/GitPython/issues/260
         """
-        out_refs: IterableList[Reference] = IterableList(RemoteReference._id_attribute_, "%s/" % self.name)
-        for line in self.repo.git.remote("prune", "--dry-run", self).splitlines()[2:]:
-            # expecting
-            # * [would prune] origin/new_branch
-            token = " * [would prune] "
-            if not line.startswith(token):
-                continue
-            ref_name = line.replace(token, "")
-            # Sometimes, paths start with a full ref name, like refs/tags/foo. See #260.
-            if ref_name.startswith(Reference._common_path_default + "/"):
-                out_refs.append(Reference.from_path(self.repo, ref_name))
-            else:
-                fqhn = "%s/%s" % (RemoteReference._common_path_default, ref_name)
-                out_refs.append(RemoteReference(self.repo, fqhn))
-            # END special case handling
-        # END for each line
-        return out_refs
+        pass
 
     @classmethod
     def create(cls, repo: "Repo", name: str, url: str, allow_unsafe_protocols: bool = False, **kwargs: Any) -> "Remote":
@@ -946,43 +873,7 @@ class Remote(LazyMixin, IterableObj):
         progress: Union[Callable[..., Any], RemoteProgress, None],
         kill_after_timeout: Union[None, float] = None,
     ) -> PushInfoList:
-        progress = to_progress_instance(progress)
-
-        # Read progress information from stderr.
-        # We hope stdout can hold all the data, it should...
-        # Read the lines manually as it will use carriage returns between the messages
-        # to override the previous one. This is why we read the bytes manually.
-        progress_handler = progress.new_message_handler()
-        output: PushInfoList = PushInfoList()
-
-        def stdout_handler(line: str) -> None:
-            try:
-                output.append(PushInfo._from_line(self, line))
-            except ValueError:
-                # If an error happens, additional info is given which we parse below.
-                pass
-
-        handle_process_output(
-            proc,
-            stdout_handler,
-            progress_handler,
-            finalizer=None,
-            decode_streams=False,
-            kill_after_timeout=kill_after_timeout,
-        )
-        stderr_text = progress.error_lines and "\n".join(progress.error_lines) or ""
-        try:
-            proc.wait(stderr=stderr_text)
-        except Exception as e:
-            # This is different than fetch (which fails if there is any stderr
-            # even if there is an output).
-            if not output:
-                raise
-            elif stderr_text:
-                _logger.warning("Error lines received while fetching: %s", stderr_text)
-                output.error = e
-
-        return output
+        pass
 
     def _assert_refspec(self) -> None:
         """Turns out we can't deal with remotes if the refspec is missing."""
@@ -1111,26 +1002,7 @@ class Remote(LazyMixin, IterableObj):
         :return:
             Please see :meth:`fetch` method.
         """
-        if refspec is None:
-            # No argument refspec, then ensure the repo's config has a fetch refspec.
-            self._assert_refspec()
-        kwargs = add_progress(kwargs, self.repo.git, progress)
-
-        refspec = Git._unpack_args(refspec or [])
-        if not allow_unsafe_protocols:
-            for ref in refspec:
-                Git.check_unsafe_protocols(ref)
-
-        if not allow_unsafe_options:
-            Git.check_unsafe_options(options=list(kwargs.keys()), unsafe_options=self.unsafe_git_pull_options)
-
-        proc = self.repo.git.pull(
-            "--", self, refspec, with_stdout=False, as_process=True, universal_newlines=True, v=True, **kwargs
-        )
-        res = self._get_fetch_info_from_stderr(proc, progress, kill_after_timeout=kill_after_timeout)
-        if hasattr(self.repo.odb, "update_cache"):
-            self.repo.odb.update_cache()
-        return res
+        pass
 
     def push(
         self,
@@ -1187,27 +1059,7 @@ class Remote(LazyMixin, IterableObj):
             Call :meth:`~PushInfoList.raise_if_error` on the returned object to raise on
             any failure.
         """
-        kwargs = add_progress(kwargs, self.repo.git, progress)
-
-        refspec = Git._unpack_args(refspec or [])
-        if not allow_unsafe_protocols:
-            for ref in refspec:
-                Git.check_unsafe_protocols(ref)
-
-        if not allow_unsafe_options:
-            Git.check_unsafe_options(options=list(kwargs.keys()), unsafe_options=self.unsafe_git_push_options)
-
-        proc = self.repo.git.push(
-            "--",
-            self,
-            refspec,
-            porcelain=True,
-            as_process=True,
-            universal_newlines=True,
-            kill_after_timeout=kill_after_timeout,
-            **kwargs,
-        )
-        return self._get_push_info(proc, progress, kill_after_timeout=kill_after_timeout)
+        pass
 
     @property
     def config_reader(self) -> SectionConstraint[GitConfigParser]:

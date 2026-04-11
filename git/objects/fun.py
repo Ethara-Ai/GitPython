@@ -84,46 +84,7 @@ def tree_entries_from_data(data: bytes) -> List[EntryTup]:
     :return:
         list(tuple(binsha, mode, tree_relative_path), ...)
     """
-    ord_zero = ord("0")
-    space_ord = ord(" ")
-    len_data = len(data)
-    i = 0
-    out = []
-    while i < len_data:
-        mode = 0
-
-        # Read Mode
-        # Some git versions truncate the leading 0, some don't.
-        # The type will be extracted from the mode later.
-        while data[i] != space_ord:
-            # Move existing mode integer up one level being 3 bits and add the actual
-            # ordinal value of the character.
-            mode = (mode << 3) + (data[i] - ord_zero)
-            i += 1
-        # END while reading mode
-
-        # Byte is space now, skip it.
-        i += 1
-
-        # Parse name, it is NULL separated.
-
-        ns = i
-        while data[i] != 0:
-            i += 1
-        # END while not reached NULL
-
-        # Default encoding for strings in git is UTF-8.
-        # Only use the respective unicode object if the byte stream was encoded.
-        name_bytes = data[ns:i]
-        name = safe_decode(name_bytes)
-
-        # Byte is NULL, get next 20.
-        i += 1
-        sha = data[i : i + 20]
-        i = i + 20
-        out.append((sha, mode, name))
-    # END for each byte in data stream
-    return out
+    pass
 
 
 def _find_by_name(tree_data: MutableSequence[EntryTupOrNone], name: str, is_dir: bool, start_at: int) -> EntryTupOrNone:
@@ -132,22 +93,7 @@ def _find_by_name(tree_data: MutableSequence[EntryTupOrNone], name: str, is_dir:
     Before the item is returned, the respective data item is set None in the `tree_data`
     list to mark it done.
     """
-
-    try:
-        item = tree_data[start_at]
-        if item and item[2] == name and S_ISDIR(item[1]) == is_dir:
-            tree_data[start_at] = None
-            return item
-    except IndexError:
-        pass
-    # END exception handling
-    for index, item in enumerate(tree_data):
-        if item and item[2] == name and S_ISDIR(item[1]) == is_dir:
-            tree_data[index] = None
-            return item
-        # END if item matches
-    # END for each item
-    return None
+    pass
 
 
 @overload
@@ -160,9 +106,7 @@ def _to_full_path(item: EntryTup, path_prefix: str) -> EntryTup: ...
 
 def _to_full_path(item: EntryTupOrNone, path_prefix: str) -> EntryTupOrNone:
     """Rebuild entry with given path prefix."""
-    if not item:
-        return item
-    return (item[0], item[1], path_prefix + item[2])
+    pass
 
 
 def traverse_trees_recursive(
@@ -193,64 +137,7 @@ def traverse_trees_recursive(
     :note:
         The ordering of the returned items will be partially lost.
     """
-    trees_data: List[List[EntryTupOrNone]] = []
-
-    nt = len(tree_shas)
-    for tree_sha in tree_shas:
-        if tree_sha is None:
-            data: List[EntryTupOrNone] = []
-        else:
-            # Make new list for typing as list invariant.
-            data = list(tree_entries_from_data(odb.stream(tree_sha).read()))
-        # END handle muted trees
-        trees_data.append(data)
-    # END for each sha to get data for
-
-    out: List[Tuple[EntryTupOrNone, ...]] = []
-
-    # Find all matching entries and recursively process them together if the match is a
-    # tree. If the match is a non-tree item, put it into the result.
-    # Processed items will be set None.
-    for ti, tree_data in enumerate(trees_data):
-        for ii, item in enumerate(tree_data):
-            if not item:
-                continue
-            # END skip already done items
-            entries: List[EntryTupOrNone]
-            entries = [None for _ in range(nt)]
-            entries[ti] = item
-            _sha, mode, name = item
-            is_dir = S_ISDIR(mode)  # Type mode bits
-
-            # Find this item in all other tree data items.
-            # Wrap around, but stop one before our current index, hence ti+nt, not
-            # ti+1+nt.
-            for tio in range(ti + 1, ti + nt):
-                tio = tio % nt
-                entries[tio] = _find_by_name(trees_data[tio], name, is_dir, ii)
-
-            # END for each other item data
-            # If we are a directory, enter recursion.
-            if is_dir:
-                out.extend(
-                    traverse_trees_recursive(
-                        odb,
-                        [((ei and ei[0]) or None) for ei in entries],
-                        path_prefix + name + "/",
-                    )
-                )
-            else:
-                out.append(tuple(_to_full_path(e, path_prefix) for e in entries))
-
-            # END handle recursion
-            # Finally mark it done.
-            tree_data[ii] = None
-        # END for each item
-
-        # We are done with one tree, set all its data empty.
-        del tree_data[:]
-    # END for each tree_data chunk
-    return out
+    pass
 
 
 def traverse_tree_recursive(odb: "GitCmdObjectDB", tree_sha: bytes, path_prefix: str) -> List[EntryTup]:
@@ -267,15 +154,4 @@ def traverse_tree_recursive(odb: "GitCmdObjectDB", tree_sha: bytes, path_prefix:
     :param path_prefix:
         Prefix to prepend to the front of all returned paths.
     """
-    entries = []
-    data = tree_entries_from_data(odb.stream(tree_sha).read())
-
-    # Unpacking/packing is faster than accessing individual items.
-    for sha, mode, name in data:
-        if S_ISDIR(mode):
-            entries.extend(traverse_tree_recursive(odb, sha, path_prefix + name + "/"))
-        else:
-            entries.append((sha, mode, path_prefix + name))
-    # END for each item
-
-    return entries
+    pass

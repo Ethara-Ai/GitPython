@@ -186,41 +186,13 @@ except GitError as _exc:
 
 
 def _warned_import(message: str, fullname: str) -> "ModuleType":
-    import importlib
-
-    warnings.warn(message, DeprecationWarning, stacklevel=3)
-    return importlib.import_module(fullname)
+    pass
 
 
 def _getattr(name: str) -> Any:
     # TODO: If __version__ is made dynamic and lazily fetched, put that case right here.
 
-    if name == "util":
-        return _warned_import(
-            "The expression `git.util` and the import `from git import util` actually "
-            "reference git.index.util, and not the git.util module accessed in "
-            '`from git.util import XYZ` or `sys.modules["git.util"]`. This potentially '
-            "confusing behavior is currently preserved for compatibility, but may be "
-            "changed in the future and should not be relied on.",
-            fullname="git.index.util",
-        )
-
-    for names, prefix in (
-        ({"head", "log", "reference", "symbolic", "tag"}, "git.refs"),
-        ({"base", "fun", "typ"}, "git.index"),
-    ):
-        if name not in names:
-            continue
-
-        fullname = f"{prefix}.{name}"
-
-        return _warned_import(
-            f"{__name__}.{name} is a private alias of {fullname} and subject to "
-            f"immediate removal. Use {fullname} instead.",
-            fullname=fullname,
-        )
-
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    pass
 
 
 if not TYPE_CHECKING:
